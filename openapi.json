@@ -1,0 +1,374 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "indices-ai-backend - Public API",
+    "description": "OpenAPI schema for `anera.markets` public endpoints.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/public/models": {
+      "get": {
+        "tags": ["public"],
+        "summary": "Get all distinct models",
+        "operationId": "get_models_api_v1_public_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/ModelItem" },
+                  "type": "array",
+                  "title": "Response Get Models Api V1 Public Models Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/token-factories": {
+      "get": {
+        "tags": ["public"],
+        "summary": "Get all distinct token factories",
+        "operationId": "get_token_factories_api_v1_public_token_factories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/TokenFactoryItem" },
+                  "type": "array",
+                  "title": "Response Get Token Factories Api V1 Public Token Factories Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/companies": {
+      "get": {
+        "tags": ["public"],
+        "summary": "Get all distinct companies",
+        "operationId": "get_companies_api_v1_public_companies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/CompanyItem" },
+                  "type": "array",
+                  "title": "Response Get Companies Api V1 Public Companies Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/revenue/{resource_type}": {
+      "get": {
+        "tags": ["public"],
+        "summary": "Get ranked revenue by resource type for a day",
+        "operationId": "get_revenue_by_resource_api_v1_public_revenue__resource_type__get",
+        "parameters": [
+          {
+            "name": "resource_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": ["token-factory", "model", "company"],
+              "type": "string",
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day.",
+              "title": "Timestamp"
+            },
+            "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day."
+          },
+          {
+            "name": "resource_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Optional resource id filter. Returns all resources when omitted.",
+              "title": "Resource Id"
+            },
+            "description": "Optional resource id filter. Returns all resources when omitted."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RevenueResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/token-utilisation/{resource_type}": {
+      "get": {
+        "tags": ["public"],
+        "summary": "Get ranked token utilisation by resource type for a day",
+        "operationId": "get_token_utilisation_by_resource_api_v1_public_token_utilisation__resource_type__get",
+        "parameters": [
+          {
+            "name": "resource_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": ["token-factory", "model", "company"],
+              "type": "string",
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "timestamp",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day.",
+              "title": "Timestamp"
+            },
+            "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day."
+          },
+          {
+            "name": "resource_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Optional resource id filter. Returns all resources when omitted.",
+              "title": "Resource Id"
+            },
+            "description": "Optional resource id filter. Returns all resources when omitted."
+          },
+          {
+            "name": "token_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": ["total", "prompt", "completion", "reasoning"],
+              "type": "string",
+              "description": "Token type selector. Applies to model/company resources.",
+              "default": "total",
+              "title": "Token Type"
+            },
+            "description": "Token type selector. Applies to model/company resources."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenUtilisationResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CompanyItem": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Company/provider identifier"
+          }
+        },
+        "type": "object",
+        "required": ["provider"],
+        "title": "CompanyItem"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ModelItem": {
+        "properties": {
+          "model_slug": {
+            "type": "string",
+            "title": "Model Slug",
+            "description": "Unique model slug"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name",
+            "description": "Display model name"
+          }
+        },
+        "type": "object",
+        "required": ["model_slug", "model_name"],
+        "title": "ModelItem"
+      },
+      "RevenueResponse": {
+        "properties": {
+          "resource_type": {
+            "type": "string",
+            "enum": ["token-factory", "model", "company"],
+            "title": "Resource Type"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "YYYY-MM-DD date used for the ranking"
+          },
+          "items": {
+            "items": { "$ref": "#/components/schemas/RevenueRow" },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["resource_type", "timestamp"],
+        "title": "RevenueResponse"
+      },
+      "RevenueRow": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Resource identifier"
+          },
+          "revenue_usd": {
+            "type": "number",
+            "title": "Revenue Usd",
+            "description": "Revenue in USD"
+          }
+        },
+        "type": "object",
+        "required": ["resource_id", "revenue_usd"],
+        "title": "RevenueRow"
+      },
+      "TokenFactoryItem": {
+        "properties": {
+          "provider_slug": {
+            "type": "string",
+            "title": "Provider Slug",
+            "description": "Token factory slug"
+          },
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name",
+            "description": "Token factory display name"
+          }
+        },
+        "type": "object",
+        "required": ["provider_slug", "provider_name"],
+        "title": "TokenFactoryItem"
+      },
+      "TokenUtilisationResponse": {
+        "properties": {
+          "resource_type": {
+            "type": "string",
+            "enum": ["token-factory", "model", "company"],
+            "title": "Resource Type"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "YYYY-MM-DD date used for the ranking"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": ["total", "prompt", "completion", "reasoning"],
+            "title": "Token Type"
+          },
+          "items": {
+            "items": { "$ref": "#/components/schemas/TokenUtilisationRow" },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["resource_type", "timestamp", "token_type"],
+        "title": "TokenUtilisationResponse"
+      },
+      "TokenUtilisationRow": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Resource identifier"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name",
+            "description": "Resource display name"
+          },
+          "token_count": {
+            "type": "integer",
+            "title": "Token Count",
+            "description": "Token usage for selected token_type"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "description": "Rank ordered by highest token usage first"
+          }
+        },
+        "type": "object",
+        "required": ["resource_id", "resource_name", "token_count", "rank"],
+        "title": "TokenUtilisationRow"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [{ "type": "string" }, { "type": "integer" }]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

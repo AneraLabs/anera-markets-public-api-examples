@@ -1,0 +1,16 @@
+{
+  "name": "anera-markets-public-api-examples-ts",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/examples.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "~5.6.0"
+  }
+}
