@@ -1,6 +1,6 @@
-# anera.markets public API examples
+# [anera.markets](anera.markets) public API examples
 
-This repository contains small, runnable examples for the **anera.markets** public HTTP API: listing models, token factories, and companies, plus daily **revenue** and **token utilisation** rankings by resource type.
+This repository contains small, runnable examples for the **anera.markets** public [HTTP API](https://api.anera.markets/docs/v1/public): listing models, token factories, and companies, plus daily **revenue** and **token utilisation** rankings by resource type.
 
 The machine-readable contract lives in [`openapi.json`](openapi.json) (OpenAPI 3.1). Use it with codegen tools, Postman, or any OpenAPI-aware client if you prefer not to hand-roll requests.
 
