@@ -12,7 +12,7 @@ Set:
 
 | Variable | Meaning |
 | -------- | ------- |
-| `ANERA_MARKETS_API_BASE_URL` | Origin only, e.g. `https://api.example.com` |
+| `ANERA_MARKETS_API_BASE_URL` | Origin only, i.e. `https://api.anera.markets` |
 
 The examples **require** this variable so they never silently call the wrong environment.
 
@@ -59,7 +59,7 @@ cd python
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-export ANERA_MARKETS_API_BASE_URL='https://your-api-origin'
+export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
 python examples.py
 ```
 
@@ -81,7 +81,7 @@ Import and reuse the functions from your own code, or copy the `_get` pattern if
 cd typescript
 npm install
 npm run build
-export ANERA_MARKETS_API_BASE_URL='https://your-api-origin'
+export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
 npm start
 # runs: node dist/examples.js
 ```
