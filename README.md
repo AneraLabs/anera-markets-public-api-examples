@@ -1,4 +1,4 @@
-# [anera.markets](anera.markets) public API examples
+# [https://anera.markets](anera.markets) public API examples
 
 This repository contains small, runnable examples for the **anera.markets** public [HTTP API](https://api.anera.markets/docs/v1/public): listing models, token factories, and companies, plus daily **revenue** and **token utilisation** rankings by resource type.
 
