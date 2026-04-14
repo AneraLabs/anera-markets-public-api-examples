@@ -23,12 +23,7 @@ DAYS = 7  # Number of days to look back
 
 
 def _base_url() -> str:
-    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "").strip().rstrip("/")
-    if not base:
-        raise SystemExit(
-            "Set ANERA_MARKETS_API_BASE_URL to the API origin, e.g. "
-            "export ANERA_MARKETS_API_BASE_URL=https://api.example.com"
-        )
+    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "https://api.anera.markets").strip().rstrip("/")
     return base
 
 

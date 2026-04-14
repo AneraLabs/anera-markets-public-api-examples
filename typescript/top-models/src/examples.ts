@@ -15,14 +15,7 @@ const TOP_N = 20; // Number of top models to display
 const TIMESTAMP: string | undefined = undefined; // Set to "YYYY-MM-DD" for specific date, or undefined for latest
 
 function baseUrl(): string {
-  const base = (process.env.ANERA_MARKETS_API_BASE_URL ?? "").trim().replace(/\/$/, "");
-  if (!base) {
-    console.error(
-      "Set ANERA_MARKETS_API_BASE_URL to the API origin, e.g. " +
-        "ANERA_MARKETS_API_BASE_URL=https://api.example.com",
-    );
-    process.exit(1);
-  }
+  const base = (process.env.ANERA_MARKETS_API_BASE_URL ?? "https://api.anera.markets").trim().replace(/\/$/, "");
   return base;
 }
 
