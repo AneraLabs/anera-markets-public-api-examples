@@ -50,6 +50,16 @@ See `openapi.json` for full schemas and validation rules.
 
 ---
 
+## Examples
+
+* **General API examples** [ [python](python/general-examples/examples.py) | [typescript](typescript/general-examples/examples.ts) ]
+* **Company revenue by date range** [ [python](python/company-revenue/examples.py) | [typescript](typescript/company-revenue/src/examples.ts) ]
+* **Token utilisation by token type** [ [python](python/token-utilisation/examples.py) | [typescript](typescript/token-utilisation/src/examples.ts) ]
+* **Top models by revenue** [ [python](python/top-models/examples.py) | [typescript](typescript/top-models/src/examples.ts) ]
+* **Revenue trend analysis** [ [python](python/revenue-trend/examples.py) | [typescript](typescript/revenue-trend/src/examples.ts) ]
+
+---
+
 ## Python
 
 **Requirements:** Python 3.10+ recommended (uses modern typing). Dependencies are listed in [`python/requirements.txt`](python/requirements.txt).
@@ -60,10 +70,10 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
-python examples.py
+python general-examples/examples.py
 ```
 
-[`python/examples.py`](python/examples.py) defines small functions—`get_models()`, `get_token_factories()`, `get_companies()`, `get_revenue(...)`, `get_token_utilisation(...)`—that mirror the endpoints. Running the file as a script prints truncated JSON samples for each call so you can verify connectivity quickly.
+[`python/general-examples/examples.py`](python/general-examples/examples.py) defines small functions—`get_models()`, `get_token_factories()`, `get_companies()`, `get_revenue(...)`, `get_token_utilisation(...)`—that mirror the endpoints. Running the file as a script prints truncated JSON samples for each call so you can verify connectivity quickly.
 
 Import and reuse the functions from your own code, or copy the `_get` pattern if you prefer a single generic helper.
 
@@ -73,9 +83,9 @@ Import and reuse the functions from your own code, or copy the `_get` pattern if
 
 **Requirements:** Node.js **18+** (global `fetch`) and npm. [`typescript/package.json`](typescript/package.json) pins the TypeScript compiler as a dev dependency.
 
-[`typescript/src/types.ts`](typescript/src/types.ts) defines **request** query types (`RevenueQueryParams`, `TokenUtilisationQueryParams`) and **response** types (`ModelItem`, `RevenueResponse`, `TokenUtilisationResponse`, row types, etc.) aligned with [`openapi.json`](openapi.json).
+[`typescript/general-examples/types.ts`](typescript/general-examples/types.ts) defines **request** query types (`RevenueQueryParams`, `TokenUtilisationQueryParams`) and **response** types (`ModelItem`, `RevenueResponse`, `TokenUtilisationResponse`, row types, etc.) aligned with [`openapi.json`](openapi.json).
 
-[`typescript/src/examples.ts`](typescript/src/examples.ts) implements typed `fetch` helpers with `Promise<…>` return types and re-exports the public types for convenience.
+[`typescript/general-examples/examples.ts`](typescript/general-examples/examples.ts) implements typed `fetch` helpers with `Promise<…>` return types and re-exports the public types for convenience.
 
 ```bash
 cd typescript

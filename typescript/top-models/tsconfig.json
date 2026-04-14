@@ -5,7 +5,7 @@
     "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "general-examples",
+    "rootDir": "src",
     "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
@@ -13,5 +13,5 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["general-examples/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }
