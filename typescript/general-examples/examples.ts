@@ -5,6 +5,7 @@
  */
 
 import type {
+  AttestationResponse,
   CompanyItem,
   ModelItem,
   ResourceType,
@@ -16,6 +17,7 @@ import type {
 } from "./types.js";
 
 export type {
+  AttestationResponse,
   CompanyItem,
   ModelItem,
   ResourceType,
@@ -98,6 +100,10 @@ export function getTokenUtilisation(
   });
 }
 
+export function getAttestation(eventId: string): Promise<AttestationResponse> {
+  return getJson<AttestationResponse>(`/api/v1/public/attestations/${eventId}`);
+}
+
 async function main(): Promise<void> {
   console.log("Models (first 3):");
   const models = await getModels();
@@ -139,6 +145,19 @@ async function main(): Promise<void> {
     ),
   );
   console.log(JSON.stringify((util.items ?? []).slice(0, 5), null, 2));
+
+  console.log("\nAttestation for event:");
+  try {
+    const attestation = await getAttestation("evt_123456789");
+    console.log(JSON.stringify(attestation, null, 2));
+  } catch (err) {
+    const error = err as Error;
+    if (error.message.includes("404")) {
+      console.log("Event not found (404) - use a valid event_id");
+    } else {
+      throw err;
+    }
+  }
 }
 
 main().catch((err: unknown) => {

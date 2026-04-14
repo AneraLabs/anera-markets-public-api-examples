@@ -59,3 +59,12 @@ export interface TokenUtilisationQueryParams extends RevenueQueryParams {
   /** Defaults to `total` on the server; sent explicitly here for clarity. */
   token_type?: TokenType;
 }
+
+/** Response for GET /api/v1/public/attestations/{event_id} */
+export interface AttestationResponse {
+  event_id: string;
+  start_time: string;
+  end_time: string;
+  finalised_time: string | null;
+  outcome: Record<string, unknown> | null;
+}

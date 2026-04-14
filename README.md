@@ -25,6 +25,7 @@ The examples **require** this variable so they never silently call the wrong env
 | `GET` | `/api/v1/public/companies` | All distinct companies (`provider`) |
 | `GET` | `/api/v1/public/revenue/{resource_type}` | Ranked revenue in USD for one day |
 | `GET` | `/api/v1/public/token-utilisation/{resource_type}` | Ranked token usage for one day |
+| `GET` | `/api/v1/public/attestations/{event_id}` | Canonical outcome for a prediction market event |
 
 Path parameter **`resource_type`** is one of: `token-factory`, `model`, `company`.
 
@@ -45,6 +46,7 @@ Path parameter **`resource_type`** is one of: `token-factory`, `model`, `company
 
 - **Revenue:** `{ resource_type, timestamp, items?: [{ resource_id, revenue_usd }] }`
 - **Token utilisation:** `{ resource_type, timestamp, token_type, items?: [{ resource_id, resource_name, token_count, rank }] }`
+- **Attestation:** `{ event_id, start_time, end_time, finalised_time, outcome }`
 
 See `openapi.json` for full schemas and validation rules.
 
@@ -57,6 +59,7 @@ See `openapi.json` for full schemas and validation rules.
 * **Token utilisation by token type** [ [python](python/token-utilisation/examples.py) | [typescript](typescript/token-utilisation/src/examples.ts) ]
 * **Top models by revenue** [ [python](python/top-models/examples.py) | [typescript](typescript/top-models/src/examples.ts) ]
 * **Revenue trend analysis** [ [python](python/revenue-trend/examples.py) | [typescript](typescript/revenue-trend/src/examples.ts) ]
+* **Attestation for prediction market event** [ [python](python/attestations/examples.py) | [typescript](typescript/attestations/examples.ts) ]
 
 ---
 
@@ -73,9 +76,16 @@ export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
 python general-examples/examples.py
 ```
 
-[`python/general-examples/examples.py`](python/general-examples/examples.py) defines small functions—`get_models()`, `get_token_factories()`, `get_companies()`, `get_revenue(...)`, `get_token_utilisation(...)`—that mirror the endpoints. Running the file as a script prints truncated JSON samples for each call so you can verify connectivity quickly.
+[`python/general-examples/examples.py`](python/general-examples/examples.py) defines small functions—`get_models()`, `get_token_factories()`, `get_companies()`, `get_revenue(...)`, `get_token_utilisation(...)`, `get_attestation(...)`—that mirror the endpoints. Running the file as a script prints truncated JSON samples for each call so you can verify connectivity quickly.
 
 Import and reuse the functions from your own code, or copy the `_get` pattern if you prefer a single generic helper.
+
+For a dedicated attestation example, see [`python/attestations/examples.py`](python/attestations/examples.py).
+
+```bash
+cd python
+python attestations/examples.py
+```
 
 ---
 
@@ -83,7 +93,7 @@ Import and reuse the functions from your own code, or copy the `_get` pattern if
 
 **Requirements:** Node.js **18+** (global `fetch`) and npm. [`typescript/package.json`](typescript/package.json) pins the TypeScript compiler as a dev dependency.
 
-[`typescript/general-examples/types.ts`](typescript/general-examples/types.ts) defines **request** query types (`RevenueQueryParams`, `TokenUtilisationQueryParams`) and **response** types (`ModelItem`, `RevenueResponse`, `TokenUtilisationResponse`, row types, etc.) aligned with [`openapi.json`](openapi.json).
+[`typescript/general-examples/types.ts`](typescript/general-examples/types.ts) defines **request** query types (`RevenueQueryParams`, `TokenUtilisationQueryParams`) and **response** types (`ModelItem`, `RevenueResponse`, `TokenUtilisationResponse`, `AttestationResponse`, row types, etc.) aligned with [`openapi.json`](openapi.json).
 
 [`typescript/general-examples/examples.ts`](typescript/general-examples/examples.ts) implements typed `fetch` helpers with `Promise<…>` return types and re-exports the public types for convenience.
 
@@ -94,6 +104,16 @@ npm run build
 export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
 npm start
 # runs: node dist/examples.js
+```
+
+For a dedicated attestation example, see [`typescript/attestations/`](typescript/attestations/).
+
+```bash
+cd typescript/attestations
+npm install
+npm run build
+export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
+npm start
 ```
 
 In the browser, you can port the same types and adapt the `fetch` calls, subject to **CORS** policy on the API host.

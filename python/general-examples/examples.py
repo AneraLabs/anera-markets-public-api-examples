@@ -75,6 +75,10 @@ def get_token_utilisation(
     return _get(f"/api/v1/public/token-utilisation/{resource_type}", params=params)
 
 
+def get_attestation(event_id: str) -> dict[str, Any]:
+    return _get(f"/api/v1/public/attestations/{event_id}")
+
+
 def main() -> None:
     print("Models (first 3):")
     models = get_models()
@@ -99,6 +103,27 @@ def main() -> None:
     print(json.dumps({k: util[k] for k in ("resource_type", "timestamp", "token_type")}, indent=2))
     uitems = util.get("items") or []
     print(json.dumps(uitems[:5], indent=2))
+
+    print("\nAttestation for event:")
+    try:
+        attestation = get_attestation("evt_123456789")
+
+        finalised_time = attestation.get("finalised_time")
+        outcome = attestation.get("outcome")
+
+        if finalised_time is None and outcome is None:
+            print("Status: UNRESOLVED")
+        elif finalised_time is not None and outcome is not None:
+            print("Status: RESOLVED")
+            print(f"Finalised at: {finalised_time}")
+            print(f"Outcome: {json.dumps(outcome, indent=2)}")
+        else:
+            print("Status: UNKNOWN - unexpected response state")
+    except requests.HTTPError as e:
+        if e.response is not None and e.response.status_code == 404:
+            print("Status: UNKNOWN - event not found (404)")
+        else:
+            raise
 
 
 if __name__ == "__main__":

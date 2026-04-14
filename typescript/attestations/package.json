@@ -1,0 +1,17 @@
+{
+  "name": "anera-markets-attestations-example",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/examples.js",
+    "test": "node dist/test_examples.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "~5.6.0"
+  }
+}
