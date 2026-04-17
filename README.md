@@ -52,6 +52,10 @@ See `openapi.json` for full schemas and validation rules.
 
 ---
 
+## Data Note
+
+All our data is made available t+1. This means that Monday's data can only be accessed on Tuesday. Traders on financial markets using this data must make note of this. 
+
 ## Examples
 
 * **General API examples** [ [python](python/general-examples/examples.py) | [typescript](typescript/general-examples/examples.ts) ]
