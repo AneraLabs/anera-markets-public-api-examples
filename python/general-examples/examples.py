@@ -8,37 +8,25 @@ Example: export ANERA_MARKETS_API_BASE_URL=https://api.example.com
 from __future__ import annotations
 
 import json
-import os
+import requests
 from typing import Any, Literal
 
-import requests
+from shared.http import get_json
 
 ResourceType = Literal["token-factory", "model", "company"]
 TokenType = Literal["total", "prompt", "completion", "reasoning"]
 
 
-def _base_url() -> str:
-    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "https://api.anera.markets").strip().rstrip("/")
-    return base
-
-
-def _get(path: str, params: dict[str, Any] | None = None) -> Any:
-    url = f"{_base_url()}{path}"
-    r = requests.get(url, params=params or {}, timeout=60)
-    r.raise_for_status()
-    return r.json()
-
-
 def get_models() -> list[dict[str, Any]]:
-    return _get("/api/v1/public/models")
+    return get_json("/api/v1/public/models")
 
 
 def get_token_factories() -> list[dict[str, Any]]:
-    return _get("/api/v1/public/token-factories")
+    return get_json("/api/v1/public/token-factories")
 
 
 def get_companies() -> list[dict[str, Any]]:
-    return _get("/api/v1/public/companies")
+    return get_json("/api/v1/public/companies")
 
 
 def get_revenue(
@@ -52,7 +40,7 @@ def get_revenue(
         params["timestamp"] = timestamp
     if resource_id is not None:
         params["resource_id"] = resource_id
-    return _get(f"/api/v1/public/revenue/{resource_type}", params=params)
+    return get_json(f"/api/v1/public/revenue/{resource_type}", params=params)
 
 
 def get_token_utilisation(
@@ -67,11 +55,11 @@ def get_token_utilisation(
         params["timestamp"] = timestamp
     if resource_id is not None:
         params["resource_id"] = resource_id
-    return _get(f"/api/v1/public/token-utilisation/{resource_type}", params=params)
+    return get_json(f"/api/v1/public/token-utilisation/{resource_type}", params=params)
 
 
 def get_attestation(event_id: str) -> dict[str, Any]:
-    return _get(f"/api/v1/public/attestations/{event_id}")
+    return get_json(f"/api/v1/public/attestations/{event_id}")
 
 
 def main() -> None:

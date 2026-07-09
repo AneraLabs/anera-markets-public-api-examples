@@ -10,12 +10,11 @@ Example: export ANERA_MARKETS_API_BASE_URL=https://api.anera.markets
 
 from __future__ import annotations
 
-import json
-import os
+import requests
 from datetime import date, timedelta
 from typing import Any
 
-import requests
+from shared.http import get_json
 
 
 # Configure the date range here
@@ -24,24 +23,12 @@ END_DATE = date(2026, 4, 14)
 TOP_N = 10  # Number of top companies to display per day
 
 
-def _base_url() -> str:
-    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "https://api.anera.markets").strip().rstrip("/")
-    return base
-
-
-def _get(path: str, params: dict[str, Any] | None = None) -> Any:
-    url = f"{_base_url()}{path}"
-    r = requests.get(url, params=params or {}, timeout=60)
-    r.raise_for_status()
-    return r.json()
-
-
 def get_company_revenue(timestamp: str | None = None) -> dict[str, Any]:
     """Get revenue data for companies on a specific date."""
     params: dict[str, Any] = {}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return _get("/api/v1/public/revenue/company", params=params)
+    return get_json("/api/v1/public/revenue/company", params=params)
 
 
 def date_range(start: date, end: date) -> list[date]:

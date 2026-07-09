@@ -10,35 +10,12 @@
  */
 
 import type { TokenType, TokenUtilisationResponse } from "./types.js";
+import { getJson } from "./client.js";
 
 // Configure the token types to display
 const TOKEN_TYPES: TokenType[] = ["total", "prompt", "completion", "reasoning"];
 const TOP_N = 10; // Number of top companies to display per token type
 const TIMESTAMP = "2026-04-13"; // Optional: specific date (omit for latest available)
-
-function baseUrl(): string {
-  const base = (process.env.ANERA_MARKETS_API_BASE_URL ?? "https://api.anera.markets").trim().replace(/\/$/, "");
-  return base;
-}
-
-function buildQuery(params: Record<string, string | undefined>): string {
-  const search = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) search.set(k, String(v));
-  }
-  const q = search.toString();
-  return q ? `?${q}` : "";
-}
-
-async function getJson<T>(path: string, params: Record<string, string | undefined> = {}): Promise<T> {
-  const url = `${baseUrl()}${path}${buildQuery(params)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 async function getTokenUtilisation(tokenType: TokenType, timestamp?: string): Promise<TokenUtilisationResponse> {
   const params: Record<string, string | undefined> = { token_type: tokenType };

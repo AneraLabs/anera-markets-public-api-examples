@@ -5,21 +5,7 @@
  */
 
 import type { AttestationResponse } from "./types.js";
-
-function baseUrl(): string {
-  const base = (process.env.ANERA_MARKETS_API_BASE_URL ?? "https://api.anera.markets").trim().replace(/\/$/, "");
-  return base;
-}
-
-async function getJson<T>(path: string): Promise<T> {
-  const url = `${baseUrl()}${path}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
+import { getJson } from "./client.js";
 
 async function main(): Promise<void> {
   const eventId = "evt_123456789";

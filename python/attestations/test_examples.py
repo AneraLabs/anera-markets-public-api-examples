@@ -10,22 +10,14 @@ Tests three scenarios:
 from __future__ import annotations
 
 import json
-import os
+import requests
 from typing import Any
 
-import requests
-
-
-def _base_url() -> str:
-    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "https://api.anera.markets").strip().rstrip("/")
-    return base
+from shared.http import get_json
 
 
 def get_attestation(event_id: str) -> dict[str, Any]:
-    url = f"{_base_url()}/api/v1/public/attestations/{event_id}"
-    r = requests.get(url, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    return get_json(f"/api/v1/public/attestations/{event_id}")
 
 
 def test_unknown_event() -> str:

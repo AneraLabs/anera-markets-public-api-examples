@@ -9,34 +9,11 @@
  */
 
 import type { RevenueResponse } from "./types.js";
+import { getJson } from "./client.js";
 
 // Configuration
 const TOP_N = 20; // Number of top models to display
 const TIMESTAMP: string | undefined = undefined; // Set to "YYYY-MM-DD" for specific date, or undefined for latest
-
-function baseUrl(): string {
-  const base = (process.env.ANERA_MARKETS_API_BASE_URL ?? "https://api.anera.markets").trim().replace(/\/$/, "");
-  return base;
-}
-
-function buildQuery(params: Record<string, string | undefined>): string {
-  const search = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) search.set(k, String(v));
-  }
-  const q = search.toString();
-  return q ? `?${q}` : "";
-}
-
-async function getJson<T>(path: string, params: Record<string, string | undefined> = {}): Promise<T> {
-  const url = `${baseUrl()}${path}${buildQuery(params)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 async function getModelRevenue(timestamp?: string): Promise<RevenueResponse> {
   const params: Record<string, string | undefined> = {};

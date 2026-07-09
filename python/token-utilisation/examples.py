@@ -12,10 +12,10 @@ Example: export ANERA_MARKETS_API_BASE_URL=https://api.anera.markets
 from __future__ import annotations
 
 import json
-import os
+import requests
 from typing import Any, Literal
 
-import requests
+from shared.http import get_json
 
 TokenType = Literal["total", "prompt", "completion", "reasoning"]
 
@@ -26,18 +26,6 @@ TOP_N = 10  # Number of top companies to display per token type
 TIMESTAMP = "2026-04-13"  # Optional: specific date (omit for latest available)
 
 
-def _base_url() -> str:
-    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "https://api.anera.markets").strip().rstrip("/")
-    return base
-
-
-def _get(path: str, params: dict[str, Any] | None = None) -> Any:
-    url = f"{_base_url()}{path}"
-    r = requests.get(url, params=params or {}, timeout=60)
-    r.raise_for_status()
-    return r.json()
-
-
 def get_token_utilisation(
     token_type: TokenType,
     timestamp: str | None = None,
@@ -46,7 +34,7 @@ def get_token_utilisation(
     params: dict[str, Any] = {"token_type": token_type}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return _get("/api/v1/public/token-utilisation/company", params=params)
+    return get_json("/api/v1/public/token-utilisation/company", params=params)
 
 
 def format_tokens(count: int) -> str:

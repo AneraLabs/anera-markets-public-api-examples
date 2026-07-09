@@ -9,34 +9,11 @@
  */
 
 import type { RevenueResponse } from "./types.js";
+import { getJson } from "./client.js";
 
 // Configuration
 const COMPANY = "anthropic"; // Company to track (e.g., "anthropic", "openai", "google")
 const DAYS = 7; // Number of days to look back
-
-function baseUrl(): string {
-  const base = (process.env.ANERA_MARKETS_API_BASE_URL ?? "https://api.anera.markets").trim().replace(/\/$/, "");
-  return base;
-}
-
-function buildQuery(params: Record<string, string | undefined>): string {
-  const search = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) search.set(k, String(v));
-  }
-  const q = search.toString();
-  return q ? `?${q}` : "";
-}
-
-async function getJson<T>(path: string, params: Record<string, string | undefined> = {}): Promise<T> {
-  const url = `${baseUrl()}${path}${buildQuery(params)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 async function getCompanyRevenue(timestamp: string, resourceId: string): Promise<RevenueResponse> {
   return getJson<RevenueResponse>("/api/v1/public/revenue/company", {

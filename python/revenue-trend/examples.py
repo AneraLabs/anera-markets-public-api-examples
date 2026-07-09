@@ -10,28 +10,16 @@ Example: export ANERA_MARKETS_API_BASE_URL=https://api.anera.markets
 
 from __future__ import annotations
 
-import os
+import requests
 from datetime import date, timedelta
 from typing import Any
 
-import requests
+from shared.http import get_json
 
 
 # Configuration
 COMPANY = "anthropic"  # Company to track (e.g., "anthropic", "openai", "google")
 DAYS = 7  # Number of days to look back
-
-
-def _base_url() -> str:
-    base = os.environ.get("ANERA_MARKETS_API_BASE_URL", "https://api.anera.markets").strip().rstrip("/")
-    return base
-
-
-def _get(path: str, params: dict[str, Any] | None = None) -> Any:
-    url = f"{_base_url()}{path}"
-    r = requests.get(url, params=params or {}, timeout=60)
-    r.raise_for_status()
-    return r.json()
 
 
 def get_company_revenue(timestamp: str, resource_id: str) -> dict[str, Any]:
@@ -40,7 +28,7 @@ def get_company_revenue(timestamp: str, resource_id: str) -> dict[str, Any]:
         "timestamp": timestamp,
         "resource_id": resource_id,
     }
-    return _get("/api/v1/public/revenue/company", params=params)
+    return get_json("/api/v1/public/revenue/company", params=params)
 
 
 def main() -> None:
