@@ -48,19 +48,19 @@ export interface TokenUtilisationResponse {
   items?: TokenUtilisationRow[];
 }
 
-/** Query string for GET /api/v1/public/revenue/{resource_type} */
+/** Query string for GET /api/v1/revenue/{resource_type} */
 export interface RevenueQueryParams {
   timestamp?: string;
   resource_id?: string;
 }
 
-/** Query string for GET /api/v1/public/token-utilisation/{resource_type} */
+/** Query string for GET /api/v1/token-utilisation/{resource_type} */
 export interface TokenUtilisationQueryParams extends RevenueQueryParams {
   /** Defaults to `total` on the server; sent explicitly here for clarity. */
   token_type?: TokenType;
 }
 
-/** Response for GET /api/v1/public/attestations/{event_id} */
+/** Response for GET /api/v1/attestations/{event_id} */
 export interface AttestationResponse {
   event_id: string;
   start_time: string;

@@ -41,7 +41,7 @@ def get_company_revenue(timestamp: str | None = None) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return _get("/api/v1/public/revenue/company", params=params)
+    return _get("/api/v1/revenue/company", params=params)
 
 
 def date_range(start: date, end: date) -> list[date]:

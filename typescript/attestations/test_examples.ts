@@ -31,7 +31,7 @@ async function testUnknownEvent(): Promise<string> {
   outputLines.push("-".repeat(50));
 
   try {
-    await getJson<AttestationResponse>(`/api/v1/public/attestations/${eventId}`);
+    await getJson<AttestationResponse>(`/api/v1/attestations/${eventId}`);
     outputLines.push("ERROR: Expected 404 but request succeeded");
   } catch (err) {
     const error = err as Error;
@@ -55,7 +55,7 @@ async function testUnresolvedEvent(): Promise<string> {
 
   try {
     const attestation: AttestationResponse = await getJson<AttestationResponse>(
-      `/api/v1/public/attestations/${eventId}`,
+      `/api/v1/attestations/${eventId}`,
     );
     outputLines.push(`Event ID: ${attestation.event_id}`);
     outputLines.push(`Start Time: ${attestation.start_time}`);
@@ -86,7 +86,7 @@ async function testResolvedEvent(): Promise<string> {
 
   try {
     const attestation: AttestationResponse = await getJson<AttestationResponse>(
-      `/api/v1/public/attestations/${eventId}`,
+      `/api/v1/attestations/${eventId}`,
     );
     outputLines.push(`Event ID: ${attestation.event_id}`);
     outputLines.push(`Start Time: ${attestation.start_time}`);

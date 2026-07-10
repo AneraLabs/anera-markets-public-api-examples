@@ -46,7 +46,7 @@ def get_token_utilisation(
     params: dict[str, Any] = {"token_type": token_type}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return _get("/api/v1/public/token-utilisation/company", params=params)
+    return _get("/api/v1/token-utilisation/company", params=params)
 
 
 def format_tokens(count: int) -> str:

@@ -32,7 +32,7 @@ def get_attestation(event_id: str) -> dict[str, Any]:
     Raises:
         requests.HTTPError: 404 if event not found
     """
-    url = f"{_base_url()}/api/v1/public/attestations/{event_id}"
+    url = f"{_base_url()}/api/v1/attestations/{event_id}"
     r = requests.get(url, timeout=60)
     r.raise_for_status()
     return r.json()

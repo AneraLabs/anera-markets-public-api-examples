@@ -39,7 +39,7 @@ async function getJson<T>(path: string, params: Record<string, string | undefine
 }
 
 async function getCompanyRevenue(timestamp: string, resourceId: string): Promise<RevenueResponse> {
-  return getJson<RevenueResponse>("/api/v1/public/revenue/company", {
+  return getJson<RevenueResponse>("/api/v1/revenue/company", {
     timestamp,
     resource_id: resourceId,
   });

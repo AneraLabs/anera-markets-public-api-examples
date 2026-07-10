@@ -1,12 +1,12 @@
 # [anera.markets](https://anera.markets) public API examples
 
-This repository contains small, runnable examples for the **anera.markets** public [HTTP API](https://api.anera.markets/docs/v1/public): listing models, token factories, and companies, plus daily **revenue** and **token utilisation** rankings by resource type.
+This repository contains small, runnable examples for the **anera.markets** public [HTTP API](https://api.anera.markets/docs): listing models, token factories, and companies, plus daily **revenue** and **token utilisation** rankings by resource type.
 
 The machine-readable contract lives in [`openapi.json`](openapi.json) (OpenAPI 3.1). Use it with codegen tools, Postman, or any OpenAPI-aware client if you prefer not to hand-roll requests.
 
 ## Base URL
 
-All paths in the schema are rooted at `/api/v1/public/...`. You must point the examples at the correct **API origin** (scheme + host, optionally port; **no** trailing slash).
+All paths in the schema are rooted at `/api/v1/...`. You must point the examples at the correct **API origin** (scheme + host, optionally port; **no** trailing slash).
 
 Set:
 
@@ -20,12 +20,12 @@ The examples **require** this variable so they never silently call the wrong env
 
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| `GET` | `/api/v1/public/models` | All distinct models (`model_slug`, `model_name`) |
-| `GET` | `/api/v1/public/token-factories` | All distinct token factories (`provider_slug`, `provider_name`) |
-| `GET` | `/api/v1/public/companies` | All distinct companies (`provider`) |
-| `GET` | `/api/v1/public/revenue/{resource_type}` | Ranked revenue in USD for one day |
-| `GET` | `/api/v1/public/token-utilisation/{resource_type}` | Ranked token usage for one day |
-| `GET` | `/api/v1/public/attestations/{event_id}` | Canonical outcome for a prediction market event |
+| `GET` | `/api/v1/distinct-models` | All distinct models (`model_slug`, `model_name`) |
+| `GET` | `/api/v1/token-factories` | All distinct token factories (`provider_slug`, `provider_name`) |
+| `GET` | `/api/v1/companies` | All distinct companies (`provider`) |
+| `GET` | `/api/v1/revenue/{resource_type}` | Ranked revenue in USD for one day |
+| `GET` | `/api/v1/token-utilisation/{resource_type}` | Ranked token usage for one day |
+| `GET` | `/api/v1/attestations/{event_id}` | Canonical outcome for a prediction market event |
 
 Path parameter **`resource_type`** is one of: `token-factory`, `model`, `company`.
 
