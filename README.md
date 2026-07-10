@@ -14,7 +14,34 @@ Set:
 | -------- | ------- |
 | `ANERA_MARKETS_API_BASE_URL` | Origin only, i.e. `https://api.anera.markets` |
 
-The examples **require** this variable so they never silently call the wrong environment.
+The examples default to `https://api.anera.markets` if this variable is not set. Override it to target a different environment.
+
+See [`.env.example`](.env.example) for all supported variables.
+
+## Authentication
+
+Most public endpoints require no authentication. Two additional key-based mechanisms are used for specific features:
+
+### Dual-key authentication (Intelligence endpoints)
+
+The `/api/intelligence/...` endpoints require an **access key** and a **secret key**, sent as custom headers:
+
+| Header | Env Variable |
+| ------ | ------------ |
+| `X-API-ACCESS-KEY` | `ANERA_MARKETS_API_ACCESS_KEY` |
+| `X-API-SECRET-KEY` | `ANERA_MARKETS_API_SECRET_KEY` |
+
+Obtain keys from your [Anera developer dashboard](https://dashboard.anera.markets). Without valid keys, requests return `401 Unauthorized`.
+
+### Single-key authorization (Extended history)
+
+To query ticker history beyond the free 7-day window, pass an **access key** (prefixed `iai_sk_`) via the standard `Authorization` header:
+
+| Header | Env Variable |
+| ------ | ------------ |
+| `Authorization` | `ANERA_MARKETS_API_KEY` |
+
+The Python `indices` example uses this to unlock 30-day history. Without it, the extended-range demo skips with a message.
 
 ## API Endpoints
 
@@ -31,11 +58,11 @@ The examples **require** this variable so they never silently call the wrong env
 | `GET` | `/api/v1/indices` | List market indices (optional `featured` filter) |
 | `GET` | `/api/v1/indices/summary` | Summary statistics (models count, token spend) |
 | `GET` | `/api/v1/indices/{index_id}` | Detailed information for a single index |
-| `GET` | `/api/v1/tickers/{symbol}` | Historical ticker values (default 30 days) |
+| `GET` | `/api/v1/tickers/{symbol}` | Historical ticker values (7 days free; wider ranges require `Authorization` header) |
 
 ### Authenticated intelligence endpoints
 
-These endpoints require API key authentication (`X-API-ACCESS-KEY` and `X-API-SECRET-KEY` headers).
+These endpoints require dual-key authentication. See the [authentication section](#authentication).
 
 #### Model intelligence
 
@@ -89,7 +116,7 @@ These endpoints require API key authentication (`X-API-ACCESS-KEY` and `X-API-SE
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
-| `startDate` | `YYYY-MM-DD` | Start date. Defaults to 30 days ago if omitted. |
+| `startDate` | `YYYY-MM-DD` | Start date. Defaults to 7 days ago if omitted (unauthenticated). Wider date ranges require an `Authorization` header. |
 | `endDate` | `YYYY-MM-DD` | End date. Defaults to now if omitted. |
 
 #### Intelligence endpoints
@@ -130,12 +157,12 @@ All our data is made available t+1. This means that Monday's data can only be ac
 | Example | Description | Python | TypeScript |
 | ------- | ----------- | ------ | ---------- |
 | **General API** | Models, token factories, companies, revenue, token utilisation, attestations | [python/general-examples/examples.py](python/general-examples/examples.py) | [typescript/general-examples/examples.ts](typescript/general-examples/examples.ts) |
-| **Attestations** | Prediction market event outcomes (resolved/unresolved/unknown) | [python/attestations/examples.py](python/attestations/examples.py) | [typescript/attestations/examples.ts](typescript/attestations/examples.ts) |
+| **Attestations** | Prediction market event outcomes (resolved/unresolved/unknown) | [python/attestations/examples.py](python/attestations/examples.py) ([test](python/attestations/test_examples.py)) | [typescript/attestations/examples.ts](typescript/attestations/examples.ts) ([test](typescript/attestations/test_examples.ts)) |
 | **Top models** | Top revenue-generating models | [python/top-models/examples.py](python/top-models/examples.py) | [typescript/top-models/src/examples.ts](typescript/top-models/src/examples.ts) |
 | **Revenue trend** | Track company revenue changes over time | [python/revenue-trend/examples.py](python/revenue-trend/examples.py) | [typescript/revenue-trend/src/examples.ts](typescript/revenue-trend/src/examples.ts) |
 | **Token utilisation** | Token consumption by type (total/prompt/completion/reasoning) | [python/token-utilisation/examples.py](python/token-utilisation/examples.py) | [typescript/token-utilisation/src/examples.ts](typescript/token-utilisation/src/examples.ts) |
 | **Company revenue** | Top company revenue rankings for a date range | [python/company-revenue/examples.py](python/company-revenue/examples.py) | [typescript/company-revenue/src/examples.ts](typescript/company-revenue/src/examples.ts) |
-| **Indices** | Market indices, summary stats, single index detail, historical data | [python/indices/examples.py](python/indices/examples.py) | [typescript/indices/src/examples.ts](typescript/indices/src/examples.ts) |
+| **Indices** | Market indices, summary stats, single index detail, historical data (Python only) | [python/indices/examples.py](python/indices/examples.py) | [typescript/indices/src/examples.ts](typescript/indices/src/examples.ts) |
 | **Tickers** | Historical ticker price data | [python/tickers/examples.py](python/tickers/examples.py) | [typescript/tickers/src/examples.ts](typescript/tickers/src/examples.ts) |
 | **Index families** | Index families grouped by symbol prefix (derived from indices) | [python/index-families/examples.py](python/index-families/examples.py) | [typescript/index-families/src/examples.ts](typescript/index-families/src/examples.ts) |
 | **Daily tokens** | Total token count from company utilisation endpoint | [python/tokens-daily/examples.py](python/tokens-daily/examples.py) | [typescript/tokens-daily/src/examples.ts](typescript/tokens-daily/src/examples.ts) |
@@ -235,9 +262,9 @@ In the browser, you can port the same types and adapt the `fetch` calls, subject
 
 ## Troubleshooting
 
-- **`ANERA_MARKETS_API_BASE_URL` not set:** Examples use `https://api.anera.markets` as the default fallback. Export the variable to override.
+- **`ANERA_MARKETS_API_BASE_URL` not set:** Examples default to `https://api.anera.markets`. Export the variable to override.
 - **`PYTHONPATH` not set (Python):** The Python examples share a common `shared/` module. Set `PYTHONPATH=.` when running examples from the `python/` directory.
-- **HTTP 401 Unauthorized:** Authenticated endpoints require API key headers (`X-API-ACCESS-KEY` and `X-API-SECRET-KEY`). Obtain keys from your Anera developer dashboard.
+- **HTTP 401 Unauthorized:** You hit an authenticated endpoint without valid keys. See the [authentication section](#authentication).
 - **HTTP 4xx / 5xx:** The TypeScript examples surface status codes and body text in thrown `Error`s. For Python, `requests` raises `HTTPError`; wrap or log `response.text` for details.
 - **404 Not Found:** The endpoint or resource does not exist. Check that the path matches the [endpoint table](#api-endpoints) above and that path/query values are valid (e.g. `resource_type` must be `token-factory`, `model`, or `company`).
 - **Empty results:** The API returns `items: []` when no data is available for the requested date/resource combination. This is expected for future dates or recently deleted resources.
