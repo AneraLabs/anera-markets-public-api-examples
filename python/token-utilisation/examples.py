@@ -23,7 +23,7 @@ TokenType = Literal["total", "prompt", "completion", "reasoning"]
 # Configure the token types to display
 TOKEN_TYPES: list[TokenType] = ["total", "prompt", "completion", "reasoning"]
 TOP_N = 10  # Number of top companies to display per token type
-TIMESTAMP = "2026-04-13"  # Optional: specific date (omit for latest available)
+TIMESTAMP = None  # Set to "YYYY-MM-DD" for specific date, or None for latest available
 
 
 def get_token_utilisation(
@@ -34,7 +34,7 @@ def get_token_utilisation(
     params: dict[str, Any] = {"token_type": token_type}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return get_json("/api/v1/public/token-utilisation/company", params=params)
+    return get_json("/api/v1/token-utilisation/company", params=params)
 
 
 def format_tokens(count: int) -> str:
@@ -51,35 +51,36 @@ def format_tokens(count: int) -> str:
 
 def main() -> None:
     """Fetch and display token utilisation by token type."""
-    print(f"Token Utilisation by Type (Date: {TIMESTAMP})")
+    date_label = TIMESTAMP if TIMESTAMP else "Latest"
+    print(f"Token Utilisation by Type (Date: {date_label})")
     print("=" * 80)
-    
+
     for token_type in TOKEN_TYPES:
         print(f"\n{token_type.upper()}:")
         print("-" * 40)
-        
+
         try:
             data = get_token_utilisation(token_type, timestamp=TIMESTAMP)
             items = data.get("items") or []
-            
+
             if not items:
                 print("  No data available for this token type")
                 continue
-            
+
             # Display top N companies
             for i, item in enumerate(items[:TOP_N], 1):
                 token_count = item.get("token_count", 0)
-                company = item.get("resource_id", "Unknown")
+                company = item.get("resource_name") or item.get("resource_id", "Unknown")
                 formatted = format_tokens(token_count)
                 print(f"  {i:2d}. {company}: {formatted} tokens")
-                
+
         except requests.exceptions.HTTPError as e:
             print(f"  Error fetching data: {e}")
             if e.response is not None:
                 print(f"  Response: {e.response.text[:200]}")
         except Exception as e:
             print(f"  Unexpected error: {e}")
-    
+
     print("\n" + "=" * 80)
 
 

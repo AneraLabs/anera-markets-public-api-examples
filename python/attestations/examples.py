@@ -2,7 +2,7 @@
 Example: Get attestation for a prediction market event.
 
 Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
-Example: export ANERA_MARKETS_API_BASE_URL=https://api.example.com
+Example: export ANERA_MARKETS_API_BASE_URL=https://api.anera.markets
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ def get_attestation(event_id: str) -> dict[str, Any]:
     Raises:
         requests.HTTPError: 404 if event not found
     """
-    return get_json(f"/api/v1/public/attestations/{event_id}")
+    return get_json(f"/api/v1/attestations/{event_id}")
 
 
 def main() -> None:

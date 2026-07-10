@@ -1,8 +1,8 @@
 """
-Example: Model intelligence endpoints.
+Example: Model analytics using revenue and token utilisation endpoints.
 
-Demonstrates how to fetch model analytics including daily revenue per model,
-rankings, summaries, revenue by factory, and token ratios.
+Demonstrates how to fetch model revenue rankings and token utilisation
+using the standard anera.markets API endpoints.
 
 Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
 """
@@ -15,84 +15,55 @@ from typing import Any
 from shared.http import get_json
 
 
-def get_daily_revenue_per_model(days: int) -> dict[str, Any]:
-    """Get daily revenue for all models."""
-    return get_json("/api/intelligence/models/daily-revenue-per-model", {"days": days})
+def get_model_revenue(timestamp: str | None = None) -> dict[str, Any]:
+    """Get revenue data for models."""
+    params: dict[str, Any] = {}
+    if timestamp is not None:
+        params["timestamp"] = timestamp
+    return get_json("/api/v1/revenue/model", params=params)
 
 
-def get_rankings(days: int, metric: str = "revenue", limit: int = 20) -> dict[str, Any]:
-    """Get model rankings.
-
-    Args:
-        days: Number of days to aggregate over (1-90)
-        metric: Sort metric ('revenue' or 'tokens')
-        limit: Max results to return (1-500)
-    """
-    return get_json("/api/intelligence/models/rankings", {
-        "days": days,
-        "metric": metric,
-        "limit": limit,
-    })
-
-
-def get_model_overview(model_id: str) -> dict[str, Any]:
-    """Get overview for a specific model."""
-    return get_json(f"/api/intelligence/models/model/{model_id}")
-
-
-def get_model_summary(model_id: str, days: int) -> dict[str, Any]:
-    """Get summary statistics for a model."""
-    return get_json(
-        f"/api/intelligence/models/model/{model_id}/summary",
-        {"days": days},
-    )
-
-
-def get_daily_revenue_by_factory(model_id: str, days: int) -> dict[str, Any]:
-    """Get daily revenue broken down by factory for a model."""
-    return get_json(
-        f"/api/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory",
-        {"days": days},
-    )
-
-
-def get_daily_token_ratio(model_id: str, days: int) -> dict[str, Any]:
-    """Get daily token ratio breakdown for a model."""
-    return get_json(
-        f"/api/intelligence/models/model/{model_id}/breakdown/daily-token-ratio",
-        {"days": days},
-    )
+def get_model_token_utilisation(timestamp: str | None = None) -> dict[str, Any]:
+    """Get token utilisation for models."""
+    params: dict[str, Any] = {"token_type": "total"}
+    if timestamp is not None:
+        params["timestamp"] = timestamp
+    return get_json("/api/v1/token-utilisation/model", params=params)
 
 
 def main() -> None:
-    print("Model Intelligence")
+    print("Model Analytics")
     print("=" * 80)
 
-    # -- Rankings --------------------------------------------------------------
-    print("\nModel Rankings (30d, by revenue):")
+    # -- Revenue rankings --------------------------------------------------------
+    print("\nModel Revenue Rankings (latest):")
     print("-" * 40)
     try:
-        rankings = get_rankings(30, "revenue", 5)
-        for row in rankings["rows"]:
-            print(
-                f"  {row['rank']}. {row['model_name']:<30} "
-                f"${row['revenue_usd']:>12.2f}  {row['token_count']} tokens"
-            )
+        data = get_model_revenue()
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
+        print(f"  As of: {timestamp}")
+        print(f"  Models: {len(items)}")
+        for i, item in enumerate(sorted(items, key=lambda x: x.get("revenue_usd", 0), reverse=True)[:5], 1):
+            name = item.get("resource_id", "Unknown")
+            rev = item.get("revenue_usd", 0)
+            print(f"  {i}. {name:<40} ${rev:>12,.2f}")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 
-    # -- Daily revenue per model -----------------------------------------------
-    print("\nDaily Revenue Per Model (7d):")
+    # -- Token utilisation ------------------------------------------------------
+    print("\nModel Token Utilisation (latest):")
     print("-" * 40)
     try:
-        data = get_daily_revenue_per_model(7)
-        for entry in data["data"][-3:]:
-            models = entry.get("models", [])
-            if models:
-                top = max(models, key=lambda m: m["revenue_usd"])
-                print(f"  {entry['date']}: {len(models)} models (top: {top['model_name']})")
-            else:
-                print(f"  {entry['date']}: no data")
+        data = get_model_token_utilisation()
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
+        print(f"  As of: {timestamp}")
+        print(f"  Models: {len(items)}")
+        for i, item in enumerate(items[:5], 1):
+            name = item.get("resource_name") or item.get("resource_id", "Unknown")
+            count = item.get("token_count", 0)
+            print(f"  {i}. {name:<40} {count:>15,} tokens")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 

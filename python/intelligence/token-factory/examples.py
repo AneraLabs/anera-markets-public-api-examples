@@ -1,8 +1,8 @@
 """
-Example: Token factory intelligence endpoints.
+Example: Token factory analytics using revenue and token utilisation endpoints.
 
-Demonstrates how to fetch token factory analytics including daily revenue,
-rankings, summaries, and per-model breakdowns.
+Demonstrates how to fetch token factory revenue rankings and token utilisation
+using the standard anera.markets API endpoints.
 
 Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
 """
@@ -15,81 +15,55 @@ from typing import Any
 from shared.http import get_json
 
 
-def get_daily_revenue(days: int) -> dict[str, Any]:
-    """Get daily revenue for all token factories.
-
-    Args:
-        days: Number of days to fetch (1-365)
-    """
-    return get_json("/api/intelligence/token-factory/daily-revenue", {"days": days})
-
-
-def get_rankings(metric: str = "revenue", limit: int = 20) -> dict[str, Any]:
-    """Get token factory rankings.
-
-    Args:
-        metric: Sort metric ('revenue' or 'utilisation')
-        limit: Max results to return (1-500)
-    """
-    return get_json("/api/intelligence/token-factory/rankings", {
-        "metric": metric,
-        "limit": limit,
-    })
+def get_factory_revenue(timestamp: str | None = None) -> dict[str, Any]:
+    """Get revenue data for token factories."""
+    params: dict[str, Any] = {}
+    if timestamp is not None:
+        params["timestamp"] = timestamp
+    return get_json("/api/v1/revenue/token-factory", params=params)
 
 
-def get_factory_overview(factory_id: str) -> dict[str, Any]:
-    """Get overview for a specific token factory."""
-    return get_json(f"/api/intelligence/token-factory/factory/{factory_id}")
-
-
-def get_factory_summary(factory_id: str, days: int) -> dict[str, Any]:
-    """Get summary statistics for a token factory."""
-    return get_json(
-        f"/api/intelligence/token-factory/factory/{factory_id}/summary",
-        {"days": days},
-    )
-
-
-def get_daily_revenue_per_model(factory_id: str, days: int) -> dict[str, Any]:
-    """Get daily revenue broken down by model for a factory."""
-    return get_json(
-        f"/api/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model",
-        {"days": days},
-    )
-
-
-def get_model_rankings(factory_id: str, metric: str = "revenue") -> dict[str, Any]:
-    """Get model rankings within a factory."""
-    return get_json(
-        f"/api/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings",
-        {"metric": metric},
-    )
+def get_factory_token_utilisation(timestamp: str | None = None) -> dict[str, Any]:
+    """Get token utilisation for token factories."""
+    params: dict[str, Any] = {"token_type": "total"}
+    if timestamp is not None:
+        params["timestamp"] = timestamp
+    return get_json("/api/v1/token-utilisation/token-factory", params=params)
 
 
 def main() -> None:
-    print("Token Factory Intelligence")
+    print("Token Factory Analytics")
     print("=" * 80)
 
-    # -- Rankings --------------------------------------------------------------
-    print("\nFactory Rankings (by revenue):")
+    # -- Revenue ----------------------------------------------------------------
+    print("\nFactory Revenue (latest):")
     print("-" * 40)
     try:
-        rankings = get_rankings("revenue", 5)
-        for row in rankings["rows"]:
-            print(
-                f"  {row['rank']}. {row['factory_name']}: "
-                f"${row['revenue_usd']:.2f} ({row['token_utilisation']} tokens)"
-            )
+        data = get_factory_revenue()
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
+        print(f"  As of: {timestamp}")
+        print(f"  Factories: {len(items)}")
+        for i, item in enumerate(sorted(items, key=lambda x: x.get("revenue_usd", 0), reverse=True)[:5], 1):
+            name = item.get("resource_id", "Unknown")
+            rev = item.get("revenue_usd", 0)
+            print(f"  {i}. {name}: ${rev:,.2f}")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 
-    # -- Daily revenue ---------------------------------------------------------
-    print("\nDaily Revenue (7 days):")
+    # -- Token utilisation ------------------------------------------------------
+    print("\nFactory Token Utilisation (latest):")
     print("-" * 40)
     try:
-        data = get_daily_revenue(7)
-        for entry in data["data"][-3:]:
-            print(f"  {entry['date']}: {len(entry['factories'])} factories")
+        data = get_factory_token_utilisation()
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
+        print(f"  As of: {timestamp}")
+        print(f"  Factories: {len(items)}")
+        for i, item in enumerate(items[:5], 1):
+            name = item.get("resource_name") or item.get("resource_id", "Unknown")
+            count = item.get("token_count", 0)
+            print(f"  {i}. {name}: {count:,} tokens")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 

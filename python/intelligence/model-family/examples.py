@@ -1,8 +1,8 @@
 """
-Example: Model family intelligence endpoints.
+Example: Model family analytics using revenue endpoints.
 
-Demonstrates how to fetch model family analytics including rankings,
-daily revenue, summaries, and per-model breakdowns.
+Demonstrates how to fetch model revenue data and group by model family
+(provider), showing family-level rankings and totals.
 
 Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
 """
@@ -15,83 +15,55 @@ from typing import Any
 from shared.http import get_json
 
 
-def get_daily_revenue(days: int) -> dict[str, Any]:
-    """Get daily revenue for all model families."""
-    return get_json("/api/intelligence/model-family/daily-revenue", {"days": days})
+def get_model_revenue(timestamp: str | None = None) -> dict[str, Any]:
+    """Get revenue data for models."""
+    params: dict[str, Any] = {}
+    if timestamp is not None:
+        params["timestamp"] = timestamp
+    return get_json("/api/v1/revenue/model", params=params)
 
 
-def get_rankings(days: int, metric: str = "revenue", limit: int = 20) -> dict[str, Any]:
-    """Get model family rankings."""
-    return get_json("/api/intelligence/model-family/rankings", {
-        "days": days,
-        "metric": metric,
-        "limit": limit,
-    })
-
-
-def get_family_overview(family_id: str) -> dict[str, Any]:
-    """Get overview for a specific model family."""
-    return get_json(f"/api/intelligence/model-family/family/{family_id}")
-
-
-def get_family_summary(family_id: str, days: int) -> dict[str, Any]:
-    """Get summary statistics for a model family."""
-    return get_json(
-        f"/api/intelligence/model-family/family/{family_id}/summary",
-        {"days": days},
-    )
-
-
-def get_daily_revenue_per_model(family_id: str, days: int) -> dict[str, Any]:
-    """Get daily revenue breakdown per model within a family."""
-    return get_json(
-        f"/api/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model",
-        {"days": days},
-    )
-
-
-def get_model_rankings(family_id: str, metric: str = "revenue") -> dict[str, Any]:
-    """Get model rankings within a family."""
-    return get_json(
-        f"/api/intelligence/model-family/family/{family_id}/breakdown/model-rankings",
-        {"metric": metric},
-    )
+def get_family_revenue(timestamp: str | None = None) -> dict[str, Any]:
+    """Get revenue data for token factories (providers/families)."""
+    params: dict[str, Any] = {}
+    if timestamp is not None:
+        params["timestamp"] = timestamp
+    return get_json("/api/v1/revenue/token-factory", params=params)
 
 
 def main() -> None:
-    print("Model Family Intelligence")
+    print("Model Family Analytics")
     print("=" * 80)
 
-    # -- Rankings --------------------------------------------------------------
-    print("\nModel Family Rankings (30d, by revenue):")
+    # -- Provider/Family revenue ------------------------------------------------
+    print("\nProvider Revenue Rankings (latest):")
     print("-" * 40)
     try:
-        rankings = get_rankings(30, "revenue", 10)
-        for row in rankings["rows"]:
-            print(
-                f"  {row['rank']}. {row['family_name']:<20} "
-                f"${row['revenue_usd']:>12.2f}  {row['token_count']} tokens"
-            )
+        data = get_family_revenue()
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
+        print(f"  As of: {timestamp}")
+        print(f"  Providers: {len(items)}")
+        for i, item in enumerate(sorted(items, key=lambda x: x.get("revenue_usd", 0), reverse=True)[:10], 1):
+            name = item.get("resource_id", "Unknown")
+            rev = item.get("revenue_usd", 0)
+            print(f"  {i}. {name:<20} ${rev:>12,.2f}")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 
-    # -- Daily revenue ---------------------------------------------------------
-    print("\nDaily Revenue (7d):")
+    # -- Top models by provider -------------------------------------------------
+    print("\nTop Models (latest):")
     print("-" * 40)
     try:
-        data = get_daily_revenue(7)
-        for entry in data["data"]:
-            total = sum(f["revenue_usd"] for f in entry["families"])
-            print(f"  {entry['date']}: ${total:.2f} ({len(entry['families'])} families)")
-    except requests.HTTPError as e:
-        print(f"Error: {e}")
-
-    # -- Family overview -------------------------------------------------------
-    print("\nFamily Overview (openai):")
-    print("-" * 40)
-    try:
-        overview = get_family_overview("openai")
-        print(f"  {overview['family_name']}: {overview['description']}")
+        data = get_model_revenue()
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
+        print(f"  As of: {timestamp}")
+        print(f"  Models: {len(items)}")
+        for i, item in enumerate(sorted(items, key=lambda x: x.get("revenue_usd", 0), reverse=True)[:10], 1):
+            name = item.get("resource_id", "Unknown")
+            rev = item.get("revenue_usd", 0)
+            print(f"  {i}. {name:<40} ${rev:>12,.2f}")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 

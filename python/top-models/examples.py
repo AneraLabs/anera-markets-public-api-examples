@@ -26,7 +26,7 @@ def get_model_revenue(timestamp: str | None = None) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return get_json("/api/v1/public/revenue/model", params=params)
+    return get_json("/api/v1/revenue/model", params=params)
 
 
 def main() -> None:
@@ -34,17 +34,17 @@ def main() -> None:
     data = get_model_revenue(timestamp=TIMESTAMP)
     items = data.get("items") or []
     timestamp = data.get("timestamp", "Latest")
-    
+
     print(f"Top Models by Revenue ({timestamp})")
     print("=" * 80)
     print(f"{'Rank':<6}{'Model':<50}{'Revenue (USD)':<20}")
     print("-" * 80)
-    
+
     for i, item in enumerate(items[:TOP_N], 1):
         model = item.get("resource_id", "Unknown")
         revenue = item.get("revenue_usd", 0)
         print(f"{i:<6}{model:<50}${revenue:>19,.2f}")
-    
+
     print("=" * 80)
 
 

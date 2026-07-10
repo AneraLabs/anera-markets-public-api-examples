@@ -15,28 +15,22 @@ from typing import Any
 from shared.http import get_json
 
 
-def get_daily_tokens() -> dict[str, Any]:
-    """Get current total token count and previous-day delta.
+def get_total_token_utilisation() -> dict[str, Any]:
+    """Get total token utilisation across all companies (latest available day).
 
-    Returns:
-    - totalCount: Total tokens ingested to date (as string)
-    - delta: Previous day's token count (as string)
-    - lastUpdated: ISO timestamp when the count was computed
+    Returns token counts summed across all companies.
     """
-    return get_json("/api/tokens/daily")
+    return get_json("/api/v1/token-utilisation/company", params={"token_type": "total"})
 
 
-def format_number(num_str: str | None) -> str:
-    if not num_str or num_str == "None":
-        return "N/A"
-    num = int(num_str)
-    if num >= 1e12:
-        return f"{num / 1e12:.2f}T"
-    if num >= 1e9:
-        return f"{num / 1e9:.2f}B"
-    if num >= 1e6:
-        return f"{num / 1e6:.2f}M"
-    return f"{num:,}"
+def format_number(count: int) -> str:
+    if count >= 1e12:
+        return f"{count / 1e12:.2f}T"
+    if count >= 1e9:
+        return f"{count / 1e9:.2f}B"
+    if count >= 1e6:
+        return f"{count / 1e6:.2f}M"
+    return f"{count:,}"
 
 
 def main() -> None:
@@ -44,18 +38,21 @@ def main() -> None:
     print("=" * 80)
 
     try:
-        data = get_daily_tokens()
+        data = get_total_token_utilisation()
 
-        print(f"Total tokens ingested: {format_number(data['totalCount'])}")
-        print(f"Previous day delta:    {format_number(data['delta'])}")
-        print(f"Last updated:          {data['lastUpdated']}")
+        timestamp = data.get("timestamp", "Unknown")
+        items = data.get("items") or []
 
-        delta_str = data.get("delta")
-        if delta_str and delta_str != "None":
-            per_second = int(delta_str) / 86400
-            print(f"Approx. tokens/sec:    {per_second:,.0f}")
+        total = sum(item.get("token_count", 0) for item in items)
+
+        print(f"Total tokens ingested: {format_number(total)}")
+        print(f"As of:                  {timestamp}")
+
+        if items:
+            top = items[0]
+            print(f"Top consumer:           {top.get('resource_name', top.get('resource_id'))} ({format_number(top.get('token_count', 0))} tokens)")
         else:
-            print("Approx. tokens/sec:    N/A")
+            print("No data available")
 
     except requests.HTTPError as e:
         print(f"Error: {e}")

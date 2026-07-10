@@ -17,7 +17,7 @@ from shared.http import get_json
 
 
 def get_attestation(event_id: str) -> dict[str, Any]:
-    return get_json(f"/api/v1/public/attestations/{event_id}")
+    return get_json(f"/api/v1/attestations/{event_id}")
 
 
 def test_unknown_event() -> str:

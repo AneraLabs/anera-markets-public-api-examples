@@ -28,50 +28,50 @@ def get_company_revenue(timestamp: str, resource_id: str) -> dict[str, Any]:
         "timestamp": timestamp,
         "resource_id": resource_id,
     }
-    return get_json("/api/v1/public/revenue/company", params=params)
+    return get_json("/api/v1/revenue/company", params=params)
 
 
 def main() -> None:
     """Fetch and display revenue trend for a company."""
     end_date = date.today()
     start_date = end_date - timedelta(days=DAYS - 1)
-    
+
     print(f"Revenue Trend for {COMPANY} ({DAYS} days)")
     print("=" * 80)
     print(f"{'Date':<15}{'Revenue (USD)':<25}{'Change':<20}")
     print("-" * 80)
-    
+
     prev_revenue: float | None = None
-    
+
     for day_offset in range(DAYS):
         current_date = start_date + timedelta(days=day_offset)
         timestamp = current_date.isoformat()
-        
+
         try:
             data = get_company_revenue(timestamp, COMPANY)
             items = data.get("items") or []
-            
+
             if not items:
                 print(f"{timestamp:<15}{'No data':<25}")
                 prev_revenue = None
                 continue
-            
+
             revenue = items[0].get("revenue_usd", 0)
-            
+
             # Calculate change from previous day
             if prev_revenue is not None and prev_revenue > 0:
                 change_pct = ((revenue - prev_revenue) / prev_revenue) * 100
                 change_str = f"{change_pct:+.1f}%"
             else:
                 change_str = "-"
-            
+
             print(f"{timestamp:<15}${revenue:>23,.2f}{change_str:<20}")
             prev_revenue = revenue
-            
+
         except requests.exceptions.HTTPError as e:
             print(f"{timestamp:<15}Error: {e}")
             prev_revenue = None
-    
+
     print("=" * 80)
 
 

@@ -2,7 +2,7 @@
 Example calls to the anera.markets public HTTP API.
 
 Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
-Example: export ANERA_MARKETS_API_BASE_URL=https://api.example.com
+Example: export ANERA_MARKETS_API_BASE_URL=https://api.anera.markets
 """
 
 from __future__ import annotations
@@ -18,15 +18,15 @@ TokenType = Literal["total", "prompt", "completion", "reasoning"]
 
 
 def get_models() -> list[dict[str, Any]]:
-    return get_json("/api/v1/public/models")
+    return get_json("/api/v1/distinct-models")
 
 
 def get_token_factories() -> list[dict[str, Any]]:
-    return get_json("/api/v1/public/token-factories")
+    return get_json("/api/v1/token-factories")
 
 
 def get_companies() -> list[dict[str, Any]]:
-    return get_json("/api/v1/public/companies")
+    return get_json("/api/v1/companies")
 
 
 def get_revenue(
@@ -40,7 +40,7 @@ def get_revenue(
         params["timestamp"] = timestamp
     if resource_id is not None:
         params["resource_id"] = resource_id
-    return get_json(f"/api/v1/public/revenue/{resource_type}", params=params)
+    return get_json(f"/api/v1/revenue/{resource_type}", params=params)
 
 
 def get_token_utilisation(
@@ -55,11 +55,11 @@ def get_token_utilisation(
         params["timestamp"] = timestamp
     if resource_id is not None:
         params["resource_id"] = resource_id
-    return get_json(f"/api/v1/public/token-utilisation/{resource_type}", params=params)
+    return get_json(f"/api/v1/token-utilisation/{resource_type}", params=params)
 
 
 def get_attestation(event_id: str) -> dict[str, Any]:
-    return get_json(f"/api/v1/public/attestations/{event_id}")
+    return get_json(f"/api/v1/attestations/{event_id}")
 
 
 def main() -> None:

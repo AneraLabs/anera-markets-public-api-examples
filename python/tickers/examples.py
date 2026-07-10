@@ -21,7 +21,7 @@ def get_ticker_history(
     *,
     start_date: str | None = None,
     end_date: str | None = None,
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     """
     Get historical ticker data for a symbol.
 
@@ -33,23 +33,24 @@ def get_ticker_history(
         params["startDate"] = start_date
     if end_date is not None:
         params["endDate"] = end_date
-    return get_json(f"/api/tickers/{symbol}/history", params=params)
+    return get_json(f"/api/v1/tickers/{symbol}", params=params)
 
 
 def main() -> None:
-    symbol = "CNTDI"
+    symbol = "AI-TDI"
 
     # -- Historical data (explicit date range) ----------------------------------
     print(f"Historical data for {symbol} (date range):")
     print("-" * 40)
     try:
-        items = get_ticker_history(symbol, start_date="2026-06-30", end_date="2026-07-06")
+        resp = get_ticker_history(symbol, start_date="2026-06-30", end_date="2026-07-06")
+        items = resp.get("items") or []
         if not items:
             print("  No data available for this range")
         else:
             print(f"  {len(items)} data points:")
             for pt in items:
-                print(f"    {pt['date']}: {pt['value']:.2f}")
+                print(f"    {pt['timestamp']}: {pt['value']:.2f}")
     except requests.HTTPError as e:
         print(f"  Error: {e}")
         if e.response is not None:
@@ -59,13 +60,14 @@ def main() -> None:
     print(f"\nRecent data for {symbol} (default 30 days):")
     print("-" * 40)
     try:
-        items = get_ticker_history(symbol)
+        resp = get_ticker_history(symbol)
+        items = resp.get("items") or []
         if not items:
             print("  No data available")
         else:
             print(f"  {len(items)} data points:")
             for pt in items:
-                print(f"    {pt['date']}: {pt['value']:.2f}")
+                print(f"    {pt['timestamp']}: {pt['value']:.2f}")
     except requests.HTTPError as e:
         print(f"  Error: {e}")
         if e.response is not None:
