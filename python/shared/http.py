@@ -14,9 +14,13 @@ def base_url() -> str:
     return base
 
 
-def get_json(path: str, params: dict[str, Any] | None = None) -> Any:
+def get_json(
+    path: str,
+    params: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
+) -> Any:
     """GET request returning parsed JSON."""
     url = f"{base_url()}{path}"
-    r = requests.get(url, params=params or {}, timeout=60)
+    r = requests.get(url, params=params or {}, headers=headers or {}, timeout=60)
     r.raise_for_status()
     return r.json()
