@@ -30,15 +30,15 @@ def _get(path: str, params: dict[str, Any] | None = None) -> Any:
 
 
 def get_models() -> list[dict[str, Any]]:
-    return _get("/api/v1/public/models")
+    return _get("/api/v1/distinct-models")
 
 
 def get_token_factories() -> list[dict[str, Any]]:
-    return _get("/api/v1/public/token-factories")
+    return _get("/api/v1/token-factories")
 
 
 def get_companies() -> list[dict[str, Any]]:
-    return _get("/api/v1/public/companies")
+    return _get("/api/v1/companies")
 
 
 def get_revenue(
@@ -52,7 +52,7 @@ def get_revenue(
         params["timestamp"] = timestamp
     if resource_id is not None:
         params["resource_id"] = resource_id
-    return _get(f"/api/v1/public/revenue/{resource_type}", params=params)
+    return _get(f"/api/v1/revenue/{resource_type}", params=params)
 
 
 def get_token_utilisation(
@@ -67,11 +67,11 @@ def get_token_utilisation(
         params["timestamp"] = timestamp
     if resource_id is not None:
         params["resource_id"] = resource_id
-    return _get(f"/api/v1/public/token-utilisation/{resource_type}", params=params)
+    return _get(f"/api/v1/token-utilisation/{resource_type}", params=params)
 
 
 def get_attestation(event_id: str) -> dict[str, Any]:
-    return _get(f"/api/v1/public/attestations/{event_id}")
+    return _get(f"/api/v1/attestations/{event_id}")
 
 
 def main() -> None:

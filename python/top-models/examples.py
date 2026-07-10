@@ -38,7 +38,7 @@ def get_model_revenue(timestamp: str | None = None) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if timestamp is not None:
         params["timestamp"] = timestamp
-    return _get("/api/v1/public/revenue/model", params=params)
+    return _get("/api/v1/revenue/model", params=params)
 
 
 def main() -> None:

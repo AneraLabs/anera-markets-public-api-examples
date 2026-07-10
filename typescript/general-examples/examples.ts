@@ -56,15 +56,15 @@ async function getJson<T>(path: string, params: Record<string, string | undefine
 }
 
 export function getModels(): Promise<ModelItem[]> {
-  return getJson<ModelItem[]>("/api/v1/public/models");
+  return getJson<ModelItem[]>("/api/v1/distinct-models");
 }
 
 export function getTokenFactories(): Promise<TokenFactoryItem[]> {
-  return getJson<TokenFactoryItem[]>("/api/v1/public/token-factories");
+  return getJson<TokenFactoryItem[]>("/api/v1/token-factories");
 }
 
 export function getCompanies(): Promise<CompanyItem[]> {
-  return getJson<CompanyItem[]>("/api/v1/public/companies");
+  return getJson<CompanyItem[]>("/api/v1/companies");
 }
 
 export function getRevenue(
@@ -72,7 +72,7 @@ export function getRevenue(
   params: RevenueQueryParams = {},
 ): Promise<RevenueResponse> {
   const { timestamp, resource_id: resourceId } = params;
-  return getJson<RevenueResponse>(`/api/v1/public/revenue/${resourceType}`, {
+  return getJson<RevenueResponse>(`/api/v1/revenue/${resourceType}`, {
     ...(timestamp !== undefined ? { timestamp } : {}),
     ...(resourceId !== undefined ? { resource_id: resourceId } : {}),
   });
@@ -87,7 +87,7 @@ export function getTokenUtilisation(
     resource_id: resourceId,
     token_type: tokenType = "total",
   } = params;
-  return getJson<TokenUtilisationResponse>(`/api/v1/public/token-utilisation/${resourceType}`, {
+  return getJson<TokenUtilisationResponse>(`/api/v1/token-utilisation/${resourceType}`, {
     token_type: tokenType,
     ...(timestamp !== undefined ? { timestamp } : {}),
     ...(resourceId !== undefined ? { resource_id: resourceId } : {}),
@@ -95,7 +95,7 @@ export function getTokenUtilisation(
 }
 
 export function getAttestation(eventId: string): Promise<AttestationResponse> {
-  return getJson<AttestationResponse>(`/api/v1/public/attestations/${eventId}`);
+  return getJson<AttestationResponse>(`/api/v1/attestations/${eventId}`);
 }
 
 async function main(): Promise<void> {

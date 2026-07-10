@@ -42,7 +42,7 @@ async function getJson<T>(path: string, params: Record<string, string | undefine
 async function getCompanyRevenue(timestamp?: string): Promise<RevenueResponse> {
   const params: Record<string, string | undefined> = {};
   if (timestamp) params.timestamp = timestamp;
-  return getJson<RevenueResponse>("/api/v1/public/revenue/company", params);
+  return getJson<RevenueResponse>("/api/v1/revenue/company", params);
 }
 
 function* dateRange(start: Date, end: Date): Generator<Date> {

@@ -6,7 +6,7 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/api/v1/public/models": {
+    "/api/v1/distinct-models": {
       "get": {
         "tags": ["public"],
         "summary": "Get all distinct models",
@@ -27,7 +27,7 @@
         }
       }
     },
-    "/api/v1/public/token-factories": {
+    "/api/v1/token-factories": {
       "get": {
         "tags": ["public"],
         "summary": "Get all distinct token factories",
@@ -48,7 +48,7 @@
         }
       }
     },
-    "/api/v1/public/companies": {
+    "/api/v1/companies": {
       "get": {
         "tags": ["public"],
         "summary": "Get all distinct companies",
@@ -69,7 +69,7 @@
         }
       }
     },
-    "/api/v1/public/revenue/{resource_type}": {
+    "/api/v1/revenue/{resource_type}": {
       "get": {
         "tags": ["public"],
         "summary": "Get ranked revenue by resource type for a day",
@@ -128,7 +128,7 @@
         }
       }
     },
-    "/api/v1/public/token-utilisation/{resource_type}": {
+    "/api/v1/token-utilisation/{resource_type}": {
       "get": {
         "tags": ["public"],
         "summary": "Get ranked token utilisation by resource type for a day",
@@ -200,7 +200,7 @@
         }
       }
     },
-    "/api/v1/public/attestations/{event_id}": {
+    "/api/v1/attestations/{event_id}": {
       "get": {
         "tags": ["public"],
         "summary": "Get attestation for a prediction market event",

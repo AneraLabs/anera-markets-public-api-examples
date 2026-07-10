@@ -40,7 +40,7 @@ def get_company_revenue(timestamp: str, resource_id: str) -> dict[str, Any]:
         "timestamp": timestamp,
         "resource_id": resource_id,
     }
-    return _get("/api/v1/public/revenue/company", params=params)
+    return _get("/api/v1/revenue/company", params=params)
 
 
 def main() -> None:

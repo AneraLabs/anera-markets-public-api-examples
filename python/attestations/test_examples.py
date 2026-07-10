@@ -22,7 +22,7 @@ def _base_url() -> str:
 
 
 def get_attestation(event_id: str) -> dict[str, Any]:
-    url = f"{_base_url()}/api/v1/public/attestations/{event_id}"
+    url = f"{_base_url()}/api/v1/attestations/{event_id}"
     r = requests.get(url, timeout=60)
     r.raise_for_status()
     return r.json()

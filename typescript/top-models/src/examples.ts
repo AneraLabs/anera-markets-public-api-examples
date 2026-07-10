@@ -41,7 +41,7 @@ async function getJson<T>(path: string, params: Record<string, string | undefine
 async function getModelRevenue(timestamp?: string): Promise<RevenueResponse> {
   const params: Record<string, string | undefined> = {};
   if (timestamp) params.timestamp = timestamp;
-  return getJson<RevenueResponse>("/api/v1/public/revenue/model", params);
+  return getJson<RevenueResponse>("/api/v1/revenue/model", params);
 }
 
 async function main(): Promise<void> {
