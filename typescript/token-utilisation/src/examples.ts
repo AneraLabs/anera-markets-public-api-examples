@@ -15,12 +15,12 @@ import { getJson } from "./client.js";
 // Configure the token types to display
 const TOKEN_TYPES: TokenType[] = ["total", "prompt", "completion", "reasoning"];
 const TOP_N = 10; // Number of top companies to display per token type
-const TIMESTAMP = "2026-04-13"; // Optional: specific date (omit for latest available)
+const TIMESTAMP = undefined; // Optional: specific date (omit for latest available)
 
 async function getTokenUtilisation(tokenType: TokenType, timestamp?: string): Promise<TokenUtilisationResponse> {
   const params: Record<string, string | undefined> = { token_type: tokenType };
   if (timestamp) params.timestamp = timestamp;
-  return getJson<TokenUtilisationResponse>("/api/v1/public/token-utilisation/company", params);
+  return getJson<TokenUtilisationResponse>("/api/v1/token-utilisation/company", params);
 }
 
 function formatTokens(count: number): string {
@@ -31,7 +31,7 @@ function formatTokens(count: number): string {
 }
 
 async function main(): Promise<void> {
-  console.log(`Token Utilisation by Type (Date: ${TIMESTAMP})`);
+  console.log(`Token Utilisation by Type (Date: ${TIMESTAMP ?? "Latest"})`);
   console.log("=".repeat(80));
 
   for (const tokenType of TOKEN_TYPES) {

@@ -1,9 +1,9 @@
 /**
  * Request/response shapes for the indices API.
  *
- * GET /api/indices
- * GET /api/indices/summary
- * GET /api/indices/{index_id}
+ * GET /api/v1/indices
+ * GET /api/v1/indices/summary
+ * GET /api/v1/indices/{index_id}
  */
 
 export interface CompositionData {

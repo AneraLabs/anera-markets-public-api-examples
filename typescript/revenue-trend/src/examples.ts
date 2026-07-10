@@ -16,7 +16,7 @@ const COMPANY = "anthropic"; // Company to track (e.g., "anthropic", "openai", "
 const DAYS = 7; // Number of days to look back
 
 async function getCompanyRevenue(timestamp: string, resourceId: string): Promise<RevenueResponse> {
-  return getJson<RevenueResponse>("/api/v1/public/revenue/company", {
+  return getJson<RevenueResponse>("/api/v1/revenue/company", {
     timestamp,
     resource_id: resourceId,
   });

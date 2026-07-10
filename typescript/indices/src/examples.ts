@@ -13,15 +13,15 @@ import { getJson } from "./client.js";
 async function getAllIndices(featured?: boolean): Promise<MarketDataResponse> {
   const params: Record<string, string> = {};
   if (featured !== undefined) params.featured = String(featured);
-  return getJson<MarketDataResponse>("/api/indices", params);
+  return getJson<MarketDataResponse>("/api/v1/indices", params);
 }
 
 async function getIndicesSummary(): Promise<IndicesSummaryResponse> {
-  return getJson<IndicesSummaryResponse>("/api/indices/summary");
+  return getJson<IndicesSummaryResponse>("/api/v1/indices/summary");
 }
 
 async function getIndexById(indexId: string): Promise<MarketIndex> {
-  return getJson<MarketIndex>(`/api/indices/${encodeURIComponent(indexId)}`);
+  return getJson<MarketIndex>(`/api/v1/indices/${encodeURIComponent(indexId)}`);
 }
 
 async function main(): Promise<void> {
@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   console.log("\nSingle index detail (example):");
   console.log("-".repeat(40));
   try {
-    const idx = await getIndexById("actdi-core-index");
+    const idx = await getIndexById("actdi-v3-core-index");
     console.log(`  ${idx.name} (${idx.symbol})`);
     console.log(`  Description: ${idx.description.substring(0, 100)}...`);
     console.log(`  Group: ${idx.group?.name ?? "N/A"}`);

@@ -7,31 +7,32 @@
  * Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
  */
 
-import type { PricePoint, TickerQueryParams } from "./types.js";
+import type { TickerHistoryResponse, TickerQueryParams } from "./types.js";
 import { getJson } from "./client.js";
 
-async function getTickerHistory(symbol: string, params: TickerQueryParams = {}): Promise<PricePoint[]> {
+async function getTickerHistory(symbol: string, params: TickerQueryParams = {}): Promise<TickerHistoryResponse> {
   const { startDate, endDate } = params;
   const queryParams: Record<string, string> = {};
   if (startDate !== undefined) queryParams.startDate = startDate;
   if (endDate !== undefined) queryParams.endDate = endDate;
-  return getJson<PricePoint[]>(`/api/tickers/${encodeURIComponent(symbol)}/history`, queryParams);
+  return getJson<TickerHistoryResponse>(`/api/v1/tickers/${encodeURIComponent(symbol)}`, queryParams);
 }
 
 async function main(): Promise<void> {
-  const symbol = "CNTDI";
+  const symbol = "AI-TDI";
 
   // -- Historical data (explicit date range) ----------------------------------
   console.log(`Historical data for ${symbol} (date range):`);
   console.log("-".repeat(40));
   try {
-    const items = await getTickerHistory(symbol, { startDate: "2026-06-30", endDate: "2026-07-06" });
+    const resp = await getTickerHistory(symbol, { startDate: "2026-06-30", endDate: "2026-07-06" });
+    const items = resp.items;
     if (items.length === 0) {
       console.log("  No data available for this range");
     } else {
       console.log(`  ${items.length} data points:`);
       for (const pt of items) {
-        console.log(`    ${pt.date}: ${pt.value.toFixed(2)}`);
+        console.log(`    ${pt.timestamp}: ${pt.value.toFixed(2)}`);
       }
     }
   } catch (err) {
@@ -43,13 +44,14 @@ async function main(): Promise<void> {
   console.log(`\nRecent data for ${symbol} (default 30 days):`);
   console.log("-".repeat(40));
   try {
-    const items = await getTickerHistory(symbol);
+    const resp = await getTickerHistory(symbol);
+    const items = resp.items;
     if (items.length === 0) {
       console.log("  No data available");
     } else {
       console.log(`  ${items.length} data points:`);
       for (const pt of items) {
-        console.log(`    ${pt.date}: ${pt.value.toFixed(2)}`);
+        console.log(`    ${pt.timestamp}: ${pt.value.toFixed(2)}`);
       }
     }
   } catch (err) {

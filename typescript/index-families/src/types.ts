@@ -1,38 +1,31 @@
 /**
- * Request/response shapes for index families API.
+ * Request/response shapes for the indices API (used to derive families).
+ *
+ * GET /api/v1/indices
  */
 
-export interface ChartDataPoint {
-  date: string;
+export interface MarketIndex {
+  id: string;
+  name: string;
+  symbol: string;
   value: number;
+  currency: string;
+  featured: boolean;
 }
 
-export interface PrimaryIndex {
-  index_id: string;
-  index_name: string;
-  index_value: number | null;
-  index_chart_data: ChartDataPoint[];
+export interface MarketDataResponse {
+  indices: MarketIndex[];
+  lastUpdated: string;
 }
 
-export interface IndexFamily {
-  family_id: string;
-  family_name: string;
-  family_description: string;
-  family_tickers: string[];
-  primary_index: PrimaryIndex | null;
-}
-
-export interface PrimaryIndex {
-  index_id: string;
-  index_name: string;
-  index_value: number | null;
-  index_chart_data: ChartDataPoint[];
+export interface IndexFamilyMember {
+  symbol: string;
+  name: string;
+  value: number | null;
+  currency: string;
 }
 
 export interface IndexFamily {
-  family_id: string;
   family_name: string;
-  family_description: string;
-  family_tickers: string[];
-  primary_index: PrimaryIndex | null;
+  members: IndexFamilyMember[];
 }

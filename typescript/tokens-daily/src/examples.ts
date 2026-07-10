@@ -1,27 +1,32 @@
 /**
  * Example: Get daily token counts.
  *
- * Demonstrates how to fetch the current total token count and previous-day delta
- * using the anera.markets API.
+ * Demonstrates how to fetch the current total token count from the company
+ * token utilisation endpoint.
  *
  * Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
  */
 
-import type { DailyTokensResponse } from "./types.js";
 import { getJson } from "./client.js";
 
-export async function getDailyTokens(): Promise<DailyTokensResponse> {
-  return getJson<DailyTokensResponse>("/api/tokens/daily");
+interface UtilisationItem {
+  resource_id: string;
+  resource_name: string;
+  token_count: number;
 }
 
-function formatNumber(numStr: string | null): string {
-  if (!numStr || numStr === "None") return "N/A";
-  const num = parseInt(numStr, 10);
-  if (isNaN(num)) return "N/A";
-  if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
-  if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
-  if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-  return num.toLocaleString();
+interface UtilisationResponse {
+  resource_type: string;
+  timestamp: string;
+  token_type: string;
+  items: UtilisationItem[];
+}
+
+function formatNumber(count: number): string {
+  if (count >= 1e12) return `${(count / 1e12).toFixed(2)}T`;
+  if (count >= 1e9) return `${(count / 1e9).toFixed(2)}B`;
+  if (count >= 1e6) return `${(count / 1e6).toFixed(2)}M`;
+  return count.toLocaleString();
 }
 
 async function main(): Promise<void> {
@@ -29,20 +34,25 @@ async function main(): Promise<void> {
   console.log("=".repeat(80));
 
   try {
-    const data = await getDailyTokens();
+    const data: UtilisationResponse = await getJson<UtilisationResponse>(
+      "/api/v1/token-utilisation/company",
+      { token_type: "total" },
+    );
 
-    console.log(`Total tokens ingested: ${formatNumber(data.totalCount)}`);
-    console.log(`Previous day delta:    ${formatNumber(data.delta)}`);
-    console.log(`Last updated:          ${data.lastUpdated}`);
+    const total = data.items.reduce((sum, item) => sum + item.token_count, 0);
 
-    if (data.delta && data.delta !== "None") {
-      const perSecond = parseFloat(data.delta) / 86400;
-      console.log(`Approx. tokens/sec:    ${perSecond.toFixed(0).toLocaleString()}`);
+    console.log(`Total tokens ingested: ${formatNumber(total)}`);
+    console.log(`As of:                  ${data.timestamp}`);
+
+    if (data.items.length > 0) {
+      const top = data.items[0];
+      console.log(`Top consumer:           ${top.resource_name} (${formatNumber(top.token_count)} tokens)`);
     } else {
-      console.log(`Approx. tokens/sec:    N/A`);
+      console.log("No data available");
     }
   } catch (err) {
-    console.error(`Error fetching daily tokens: ${(err as Error).message}`);
+    const error = err as Error;
+    console.error(`Error fetching daily tokens: ${error.message}`);
   }
 
   console.log("\n" + "=".repeat(80));

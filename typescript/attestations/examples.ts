@@ -15,7 +15,7 @@ async function main(): Promise<void> {
 
   try {
     const attestation: AttestationResponse = await getJson<AttestationResponse>(
-      `/api/v1/public/attestations/${eventId}`,
+      `/api/v1/attestations/${eventId}`,
     );
 
     console.log(`Event ID: ${attestation.event_id}`);

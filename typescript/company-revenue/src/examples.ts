@@ -11,15 +11,17 @@
 import type { RevenueResponse } from "./types.js";
 import { getJson } from "./client.js";
 
-// Configure the date range here
-const START_DATE = new Date("2026-04-10");
-const END_DATE = new Date("2026-04-14");
+// Configure the date range here (dynamic, like Python)
+const today = new Date();
+const START_DATE = new Date(today);
+START_DATE.setDate(today.getDate() - 7);
+const END_DATE = today;
 const TOP_N = 10; // Number of top companies to display per day
 
 async function getCompanyRevenue(timestamp?: string): Promise<RevenueResponse> {
   const params: Record<string, string | undefined> = {};
   if (timestamp) params.timestamp = timestamp;
-  return getJson<RevenueResponse>("/api/v1/public/revenue/company", params);
+  return getJson<RevenueResponse>("/api/v1/revenue/company", params);
 }
 
 function* dateRange(start: Date, end: Date): Generator<Date> {

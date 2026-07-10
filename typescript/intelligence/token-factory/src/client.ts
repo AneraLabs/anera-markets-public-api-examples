@@ -17,9 +17,17 @@ export function buildQuery(params: Record<string, string | number | undefined>):
   return q ? `?${q}` : "";
 }
 
+export function authHeaders(): Record<string, string> {
+  return {
+    "X-API-ACCESS-KEY": process.env.ANERA_MARKETS_API_ACCESS_KEY ?? "",
+    "X-API-SECRET-KEY": process.env.ANERA_MARKETS_API_SECRET_KEY ?? "",
+  };
+}
+
 export async function getJson<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
   const url = `${baseUrl()}${path}${buildQuery(params)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const headers: Record<string, string> = { Accept: "application/json", ...authHeaders() };
+  const res = await fetch(url, { headers });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`HTTP ${res.status}: ${text}`);
