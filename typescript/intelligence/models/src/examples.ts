@@ -18,7 +18,7 @@ import type {
 import { getJson } from "./client.js";
 
 async function getDailyRevenuePerModel(days: number): Promise<DailyRevenuePerModelResponse> {
-  return getJson<DailyRevenuePerModelResponse>("/api/intelligence/models/daily-revenue-per-model", { days });
+  return getJson<DailyRevenuePerModelResponse>("/api/v1/intelligence/models/daily-revenue-per-model", { days });
 }
 
 async function getRankings(
@@ -26,30 +26,30 @@ async function getRankings(
   metric: "revenue" | "tokens" = "revenue",
   limit = 20,
 ): Promise<ModelRankingResponse> {
-  return getJson<ModelRankingResponse>("/api/intelligence/models/rankings", { days, metric, limit });
+  return getJson<ModelRankingResponse>("/api/v1/intelligence/models/rankings", { days, metric, limit });
 }
 
 async function getModelOverview(modelId: string): Promise<ModelOverview> {
-  return getJson<ModelOverview>(`/api/intelligence/models/model/${encodeURIComponent(modelId)}`);
+  return getJson<ModelOverview>(`/api/v1/intelligence/models/model/${encodeURIComponent(modelId)}`);
 }
 
 async function getModelSummary(modelId: string, days: number): Promise<ModelSummaryResponse> {
   return getJson<ModelSummaryResponse>(
-    `/api/intelligence/models/model/${encodeURIComponent(modelId)}/summary`,
+    `/api/v1/intelligence/models/model/${encodeURIComponent(modelId)}/summary`,
     { days },
   );
 }
 
 async function getDailyRevenueByFactory(modelId: string, days: number): Promise<DailyRevenueByFactoryResponse> {
   return getJson<DailyRevenueByFactoryResponse>(
-    `/api/intelligence/models/model/${encodeURIComponent(modelId)}/breakdown/daily-revenue-by-token-factory`,
+    `/api/v1/intelligence/models/model/${encodeURIComponent(modelId)}/breakdown/daily-revenue-by-token-factory`,
     { days },
   );
 }
 
 async function getDailyTokenRatio(modelId: string, days: number): Promise<DailyTokenRatioResponse> {
   return getJson<DailyTokenRatioResponse>(
-    `/api/intelligence/models/model/${encodeURIComponent(modelId)}/breakdown/daily-token-ratio`,
+    `/api/v1/intelligence/models/model/${encodeURIComponent(modelId)}/breakdown/daily-token-ratio`,
     { days },
   );
 }

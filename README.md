@@ -20,28 +20,20 @@ See [`.env.example`](.env.example) for all supported variables.
 
 ## Authentication
 
-Most public endpoints require no authentication. Two additional key-based mechanisms are used for specific features:
-
-### Dual-key authentication (Intelligence endpoints)
-
-The `/api/intelligence/...` endpoints require an **access key** and a **secret key**, sent as custom headers:
-
-| Header | Env Variable |
-| ------ | ------------ |
-| `X-API-ACCESS-KEY` | `ANERA_MARKETS_API_ACCESS_KEY` |
-| `X-API-SECRET-KEY` | `ANERA_MARKETS_API_SECRET_KEY` |
-
-Obtain keys from your [Anera developer dashboard](https://dashboard.anera.markets). Without valid keys, requests return `401 Unauthorized`.
-
-### Single-key authorization (Extended history)
-
-To query ticker history beyond the free 7-day window, pass an **access key** (prefixed `iai_sk_`) via the standard `Authorization` header:
+Most public endpoints require no authentication. Some features require a single **API key** (prefixed `iai_sk_`), sent via the `Authorization` header:
 
 | Header | Env Variable |
 | ------ | ------------ |
 | `Authorization` | `ANERA_MARKETS_API_KEY` |
 
-The Python `indices` example uses this to unlock 30-day history. Without it, the extended-range demo skips with a message.
+Obtain a key from your [Anera markets Account dashboard](https://anera.markets/account). Without a valid key, authenticated requests return `401 Unauthorized`.
+
+### API key usage
+
+- **Intelligence endpoints** (`/api/v1/intelligence/...`) — require an API key.
+- **Extended ticker history** — query ticker data beyond the free 7-day window.
+
+The Python `tickers` and TypeScript `intelligence` examples use this mechanism. Without a key, those demos skip with a message.
 
 ## API Endpoints
 
@@ -68,34 +60,34 @@ These endpoints require dual-key authentication. See the [authentication section
 
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| `GET` | `/api/intelligence/models/daily-revenue-per-model` | Daily revenue aggregated across all models |
-| `GET` | `/api/intelligence/models/rankings` | Model rankings by revenue or tokens |
-| `GET` | `/api/intelligence/models/model/{model_id}` | Model overview |
-| `GET` | `/api/intelligence/models/model/{model_id}/summary` | Model summary statistics |
-| `GET` | `/api/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory` | Model revenue broken down by factory |
-| `GET` | `/api/intelligence/models/model/{model_id}/breakdown/daily-token-ratio` | Daily token ratio for a model |
+| `GET` | `/api/v1/intelligence/models/daily-revenue-per-model` | Daily revenue aggregated across all models |
+| `GET` | `/api/v1/intelligence/models/rankings` | Model rankings by revenue or tokens |
+| `GET` | `/api/v1/intelligence/models/model/{model_id}` | Model overview |
+| `GET` | `/api/v1/intelligence/models/model/{model_id}/summary` | Model summary statistics |
+| `GET` | `/api/v1/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory` | Model revenue broken down by factory |
+| `GET` | `/api/v1/intelligence/models/model/{model_id}/breakdown/daily-token-ratio` | Daily token ratio for a model |
 
 #### Model family intelligence
 
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| `GET` | `/api/intelligence/model-family/daily-revenue` | Daily revenue across model families |
-| `GET` | `/api/intelligence/model-family/rankings` | Model family rankings |
-| `GET` | `/api/intelligence/model-family/family/{family_id}` | Model family overview |
-| `GET` | `/api/intelligence/model-family/family/{family_id}/summary` | Model family summary |
-| `GET` | `/api/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model` | Family revenue per model |
-| `GET` | `/api/intelligence/model-family/family/{family_id}/breakdown/model-rankings` | Model rankings within a family |
+| `GET` | `/api/v1/intelligence/model-family/daily-revenue` | Daily revenue across model families |
+| `GET` | `/api/v1/intelligence/model-family/rankings` | Model family rankings |
+| `GET` | `/api/v1/intelligence/model-family/family/{family_id}` | Model family overview |
+| `GET` | `/api/v1/intelligence/model-family/family/{family_id}/summary` | Model family summary |
+| `GET` | `/api/v1/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model` | Family revenue per model |
+| `GET` | `/api/v1/intelligence/model-family/family/{family_id}/breakdown/model-rankings` | Model rankings within a family |
 
 #### Token factory intelligence
 
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| `GET` | `/api/intelligence/token-factory/daily-revenue` | Daily revenue across token factories |
-| `GET` | `/api/intelligence/token-factory/rankings` | Token factory rankings |
-| `GET` | `/api/intelligence/token-factory/factory/{factory_id}` | Token factory overview |
-| `GET` | `/api/intelligence/token-factory/factory/{factory_id}/summary` | Token factory summary |
-| `GET` | `/api/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model` | Factory revenue per model |
-| `GET` | `/api/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings` | Model rankings within a factory |
+| `GET` | `/api/v1/intelligence/token-factory/daily-revenue` | Daily revenue across token factories |
+| `GET` | `/api/v1/intelligence/token-factory/rankings` | Token factory rankings |
+| `GET` | `/api/v1/intelligence/token-factory/factory/{factory_id}` | Token factory overview |
+| `GET` | `/api/v1/intelligence/token-factory/factory/{factory_id}/summary` | Token factory summary |
+| `GET` | `/api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model` | Factory revenue per model |
+| `GET` | `/api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings` | Model rankings within a factory |
 
 ### Query parameters
 
@@ -205,11 +197,10 @@ python indices/examples.py
 
 ### Authenticated Python examples
 
-The intelligence examples require API key authentication:
+The intelligence examples require an API key:
 
 ```bash
-export ANERA_MARKETS_API_ACCESS_KEY='your-access-key'
-export ANERA_MARKETS_API_SECRET_KEY='your-secret-key'
+export ANERA_MARKETS_API_KEY='iai_sk_your_access_key'
 python intelligence/models/examples.py
 python intelligence/model-family/examples.py
 python intelligence/token-factory/examples.py
@@ -245,11 +236,10 @@ export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
 npm start
 ```
 
-For the intelligence examples, set your API keys:
+For the intelligence examples, set your API key:
 
 ```bash
-export ANERA_MARKETS_API_ACCESS_KEY='your-access-key'
-export ANERA_MARKETS_API_SECRET_KEY='your-secret-key'
+export ANERA_MARKETS_API_KEY='iai_sk_your_access_key'
 cd typescript/intelligence/models
 npm install
 npm run build

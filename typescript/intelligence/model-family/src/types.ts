@@ -1,12 +1,12 @@
 /**
  * Request/response shapes for the model family intelligence API.
  *
- * GET /api/intelligence/model-family/family/{family_id}
- * GET /api/intelligence/model-family/family/{family_id}/summary
- * GET /api/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model
- * GET /api/intelligence/model-family/family/{family_id}/breakdown/model-rankings
- * GET /api/intelligence/model-family/daily-revenue
- * GET /api/intelligence/model-family/rankings
+ * GET /api/v1/intelligence/model-family/family/{family_id}
+ * GET /api/v1/intelligence/model-family/family/{family_id}/summary
+ * GET /api/v1/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model
+ * GET /api/v1/intelligence/model-family/family/{family_id}/breakdown/model-rankings
+ * GET /api/v1/intelligence/model-family/daily-revenue
+ * GET /api/v1/intelligence/model-family/rankings
  */
 
 export type RankingMetric = "revenue" | "tokens";

@@ -19,27 +19,27 @@ import type {
 import { getJson } from "./client.js";
 
 async function getDailyRevenue(days: number): Promise<DailyRevenueResponse> {
-  return getJson<DailyRevenueResponse>("/api/intelligence/token-factory/daily-revenue", { days });
+  return getJson<DailyRevenueResponse>("/api/v1/intelligence/token-factory/daily-revenue", { days });
 }
 
 async function getRankings(metric: "revenue" | "utilisation" = "revenue", limit = 20): Promise<TokenFactoryRankingResponse> {
-  return getJson<TokenFactoryRankingResponse>("/api/intelligence/token-factory/rankings", { metric, limit });
+  return getJson<TokenFactoryRankingResponse>("/api/v1/intelligence/token-factory/rankings", { metric, limit });
 }
 
 async function getFactoryOverview(factoryId: string): Promise<TokenFactoryOverview> {
-  return getJson<TokenFactoryOverview>(`/api/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}`);
+  return getJson<TokenFactoryOverview>(`/api/v1/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}`);
 }
 
 async function getFactorySummary(factoryId: string, days: number): Promise<TokenFactorySummaryResponse> {
   return getJson<TokenFactorySummaryResponse>(
-    `/api/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}/summary`,
+    `/api/v1/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}/summary`,
     { days },
   );
 }
 
 async function getDailyRevenuePerModel(factoryId: string, days: number): Promise<DailyRevenuePerModelResponse> {
   return getJson<DailyRevenuePerModelResponse>(
-    `/api/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}/breakdown/daily-revenue-per-model`,
+    `/api/v1/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}/breakdown/daily-revenue-per-model`,
     { days },
   );
 }
@@ -49,7 +49,7 @@ async function getModelRankings(
   metric: "revenue" | "tokens" = "revenue",
 ): Promise<ModelRankingResponse> {
   return getJson<ModelRankingResponse>(
-    `/api/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}/breakdown/model-rankings`,
+    `/api/v1/intelligence/token-factory/factory/${encodeURIComponent(factoryId)}/breakdown/model-rankings`,
     { metric },
   );
 }

@@ -34,23 +34,23 @@ def get_rankings(
     params: dict[str, Any] = {"days": days, "metric": metric}
     if limit is not None:
         params["limit"] = limit
-    return get_json("/api/intelligence/model-family/rankings", params, _headers())
+    return get_json("/api/v1/intelligence/model-family/rankings", params, _headers())
 
 
 def get_daily_revenue(days: int) -> dict[str, Any]:
     """Get daily revenue across model families."""
-    return get_json("/api/intelligence/model-family/daily-revenue", {"days": days}, _headers())
+    return get_json("/api/v1/intelligence/model-family/daily-revenue", {"days": days}, _headers())
 
 
 def get_family_overview(family_id: str) -> dict[str, Any]:
     """Get model family overview."""
-    return get_json(f"/api/intelligence/model-family/family/{family_id}", headers=_headers())
+    return get_json(f"/api/v1/intelligence/model-family/family/{family_id}", headers=_headers())
 
 
 def get_family_summary(family_id: str, days: int) -> dict[str, Any]:
     """Get model family summary statistics."""
     return get_json(
-        f"/api/intelligence/model-family/family/{family_id}/summary",
+        f"/api/v1/intelligence/model-family/family/{family_id}/summary",
         {"days": days},
         _headers(),
     )
@@ -59,7 +59,7 @@ def get_family_summary(family_id: str, days: int) -> dict[str, Any]:
 def get_daily_revenue_per_model(family_id: str, days: int) -> dict[str, Any]:
     """Get family revenue per model."""
     return get_json(
-        f"/api/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model",
+        f"/api/v1/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model",
         {"days": days},
         _headers(),
     )
@@ -68,7 +68,7 @@ def get_daily_revenue_per_model(family_id: str, days: int) -> dict[str, Any]:
 def get_model_rankings(family_id: str, metric: str = "revenue") -> dict[str, Any]:
     """Get model rankings within a family."""
     return get_json(
-        f"/api/intelligence/model-family/family/{family_id}/breakdown/model-rankings",
+        f"/api/v1/intelligence/model-family/family/{family_id}/breakdown/model-rankings",
         {"metric": metric},
         _headers(),
     )

@@ -28,23 +28,23 @@ def _headers() -> dict[str, str]:
 
 def get_rankings(metric: str = "revenue", limit: int = 20) -> dict[str, Any]:
     """Get token factory rankings."""
-    return get_json("/api/intelligence/token-factory/rankings", {"metric": metric, "limit": limit}, _headers())
+    return get_json("/api/v1/intelligence/token-factory/rankings", {"metric": metric, "limit": limit}, _headers())
 
 
 def get_daily_revenue(days: int) -> dict[str, Any]:
     """Get daily revenue across token factories."""
-    return get_json("/api/intelligence/token-factory/daily-revenue", {"days": days}, _headers())
+    return get_json("/api/v1/intelligence/token-factory/daily-revenue", {"days": days}, _headers())
 
 
 def get_factory_overview(factory_id: str) -> dict[str, Any]:
     """Get token factory overview."""
-    return get_json(f"/api/intelligence/token-factory/factory/{factory_id}", headers=_headers())
+    return get_json(f"/api/v1/intelligence/token-factory/factory/{factory_id}", headers=_headers())
 
 
 def get_factory_summary(factory_id: str, days: int) -> dict[str, Any]:
     """Get token factory summary statistics."""
     return get_json(
-        f"/api/intelligence/token-factory/factory/{factory_id}/summary",
+        f"/api/v1/intelligence/token-factory/factory/{factory_id}/summary",
         {"days": days},
         _headers(),
     )
@@ -53,7 +53,7 @@ def get_factory_summary(factory_id: str, days: int) -> dict[str, Any]:
 def get_daily_revenue_per_model(factory_id: str, days: int) -> dict[str, Any]:
     """Get factory revenue per model."""
     return get_json(
-        f"/api/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model",
+        f"/api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model",
         {"days": days},
         _headers(),
     )
@@ -62,7 +62,7 @@ def get_daily_revenue_per_model(factory_id: str, days: int) -> dict[str, Any]:
 def get_model_rankings(factory_id: str, metric: str = "revenue") -> dict[str, Any]:
     """Get model rankings within a factory."""
     return get_json(
-        f"/api/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings",
+        f"/api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings",
         {"metric": metric},
         _headers(),
     )

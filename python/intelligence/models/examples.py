@@ -27,7 +27,7 @@ def _headers() -> dict[str, str]:
 
 def get_daily_revenue_per_model(days: int) -> dict[str, Any]:
     """Get daily revenue aggregated across all models."""
-    return get_json("/api/intelligence/models/daily-revenue-per-model", {"days": days}, _headers())
+    return get_json("/api/v1/intelligence/models/daily-revenue-per-model", {"days": days}, _headers())
 
 
 def get_rankings(
@@ -37,7 +37,7 @@ def get_rankings(
 ) -> dict[str, Any]:
     """Get model rankings by revenue or tokens."""
     return get_json(
-        "/api/intelligence/models/rankings",
+        "/api/v1/intelligence/models/rankings",
         {"days": days, "metric": metric, "limit": limit},
         _headers(),
     )
@@ -45,13 +45,13 @@ def get_rankings(
 
 def get_model_overview(model_id: str) -> dict[str, Any]:
     """Get model overview."""
-    return get_json(f"/api/intelligence/models/model/{model_id}", headers=_headers())
+    return get_json(f"/api/v1/intelligence/models/model/{model_id}", headers=_headers())
 
 
 def get_model_summary(model_id: str, days: int) -> dict[str, Any]:
     """Get model summary statistics."""
     return get_json(
-        f"/api/intelligence/models/model/{model_id}/summary",
+        f"/api/v1/intelligence/models/model/{model_id}/summary",
         {"days": days},
         _headers(),
     )
@@ -60,7 +60,7 @@ def get_model_summary(model_id: str, days: int) -> dict[str, Any]:
 def get_daily_revenue_by_factory(model_id: str, days: int) -> dict[str, Any]:
     """Get model revenue broken down by token factory."""
     return get_json(
-        f"/api/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory",
+        f"/api/v1/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory",
         {"days": days},
         _headers(),
     )
@@ -69,7 +69,7 @@ def get_daily_revenue_by_factory(model_id: str, days: int) -> dict[str, Any]:
 def get_daily_token_ratio(model_id: str, days: int) -> dict[str, Any]:
     """Get daily token ratio for a model."""
     return get_json(
-        f"/api/intelligence/models/model/{model_id}/breakdown/daily-token-ratio",
+        f"/api/v1/intelligence/models/model/{model_id}/breakdown/daily-token-ratio",
         {"days": days},
         _headers(),
     )

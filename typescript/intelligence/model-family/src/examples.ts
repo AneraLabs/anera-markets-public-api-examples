@@ -18,29 +18,29 @@ import type {
 import { getJson } from "./client.js";
 
 async function getDailyRevenue(days: number): Promise<DailyRevenueResponse> {
-  return getJson<DailyRevenueResponse>("/api/intelligence/model-family/daily-revenue", { days });
+  return getJson<DailyRevenueResponse>("/api/v1/intelligence/model-family/daily-revenue", { days });
 }
 
 async function getRankings(days: number, metric: string, limit?: number): Promise<ModelFamilyRankingResponse> {
   const params: Record<string, string | number> = { days, metric };
   if (limit !== undefined) params.limit = limit;
-  return getJson<ModelFamilyRankingResponse>("/api/intelligence/model-family/rankings", params);
+  return getJson<ModelFamilyRankingResponse>("/api/v1/intelligence/model-family/rankings", params);
 }
 
 async function getFamilyOverview(familyId: string): Promise<ModelFamilyOverview> {
-  return getJson<ModelFamilyOverview>(`/api/intelligence/model-family/family/${encodeURIComponent(familyId)}`);
+  return getJson<ModelFamilyOverview>(`/api/v1/intelligence/model-family/family/${encodeURIComponent(familyId)}`);
 }
 
 async function getFamilySummary(familyId: string, days: number): Promise<ModelFamilySummaryResponse> {
   return getJson<ModelFamilySummaryResponse>(
-    `/api/intelligence/model-family/family/${encodeURIComponent(familyId)}/summary`,
+    `/api/v1/intelligence/model-family/family/${encodeURIComponent(familyId)}/summary`,
     { days },
   );
 }
 
 async function getDailyRevenuePerModel(familyId: string, days: number): Promise<DailyRevenuePerModelResponse> {
   return getJson<DailyRevenuePerModelResponse>(
-    `/api/intelligence/model-family/family/${encodeURIComponent(familyId)}/breakdown/daily-revenue-per-model`,
+    `/api/v1/intelligence/model-family/family/${encodeURIComponent(familyId)}/breakdown/daily-revenue-per-model`,
     { days },
   );
 }
@@ -50,7 +50,7 @@ async function getModelRankings(
   metric: "revenue" | "tokens" = "revenue",
 ): Promise<ModelRankingResponse> {
   return getJson<ModelRankingResponse>(
-    `/api/intelligence/model-family/family/${encodeURIComponent(familyId)}/breakdown/model-rankings`,
+    `/api/v1/intelligence/model-family/family/${encodeURIComponent(familyId)}/breakdown/model-rankings`,
     { metric },
   );
 }

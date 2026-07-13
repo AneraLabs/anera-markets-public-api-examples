@@ -1,12 +1,12 @@
 /**
  * Request/response shapes for the intelligence token-factory API.
  *
- * GET /api/intelligence/token-factory/daily-revenue?days={days}
- * GET /api/intelligence/token-factory/rankings?days={days}&metric={metric}&limit={limit}
- * GET /api/intelligence/token-factory/factory/{factory_id}
- * GET /api/intelligence/token-factory/factory/{factory_id}/summary?days={days}
- * GET /api/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model?days={days}
- * GET /api/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings?days={days}&metric={metric}
+ * GET /api/v1/intelligence/token-factory/daily-revenue?days={days}
+ * GET /api/v1/intelligence/token-factory/rankings?days={days}&metric={metric}&limit={limit}
+ * GET /api/v1/intelligence/token-factory/factory/{factory_id}
+ * GET /api/v1/intelligence/token-factory/factory/{factory_id}/summary?days={days}
+ * GET /api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model?days={days}
+ * GET /api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings?days={days}&metric={metric}
  */
 
 export type RankingMetric = "revenue" | "utilisation";

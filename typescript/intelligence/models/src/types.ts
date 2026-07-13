@@ -1,12 +1,12 @@
 /**
  * Request/response shapes for the models intelligence API.
  *
- * GET /api/intelligence/models/model/{model_id}/summary
- * GET /api/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory
- * GET /api/intelligence/models/model/{model_id}/breakdown/daily-token-ratio
- * GET /api/intelligence/models/model/{model_id}
- * GET /api/intelligence/models/daily-revenue-per-model
- * GET /api/intelligence/models/rankings
+ * GET /api/v1/intelligence/models/model/{model_id}/summary
+ * GET /api/v1/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory
+ * GET /api/v1/intelligence/models/model/{model_id}/breakdown/daily-token-ratio
+ * GET /api/v1/intelligence/models/model/{model_id}
+ * GET /api/v1/intelligence/models/daily-revenue-per-model
+ * GET /api/v1/intelligence/models/rankings
  */
 
 export type ModelRankingMetric = "revenue" | "tokens";
