@@ -76,10 +76,6 @@ def get_index_history(
 def main() -> None:
     print("Market Indices")
     print("=" * 80)
-
-    # Featured indices
-    print("\nFeatured indices:")
-    print("-" * 40)
     try:
         data = get_indices(featured=False)
         print(f"Last updated: {data['lastUpdated']}")
