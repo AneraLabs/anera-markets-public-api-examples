@@ -19,9 +19,13 @@ export function buildQuery(params: Record<string, string | number | undefined>):
   return q ? `?${q}` : "";
 }
 
-export async function getJson<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
+export async function getJson<T>(
+  path: string,
+  params: Record<string, string | number | undefined> = {},
+  headers: Record<string, string> = {},
+): Promise<T> {
   const url = `${baseUrl()}${path}${buildQuery(params)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetch(url, { headers: { Accept: "application/json", ...headers } });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`HTTP ${res.status}: ${text}`);

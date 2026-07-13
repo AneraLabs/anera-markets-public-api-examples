@@ -50,7 +50,7 @@ The Python `tickers` and TypeScript `intelligence` examples use this mechanism. 
 | `GET` | `/api/v1/indices` | List market indices (optional `featured` filter) |
 | `GET` | `/api/v1/indices/summary` | Summary statistics (models count, token spend) |
 | `GET` | `/api/v1/indices/{index_id}` | Detailed information for a single index |
-| `GET` | `/api/v1/tickers/{symbol}` | Historical ticker values (7 days free; wider ranges require `Authorization` header) |
+| `GET` | `/api/v1/tickers/{symbol}` | Historical ticker values (7 days free; use `time_period` for custom lookback or `startDate`/`endDate` for explicit ranges; wider ranges require `Authorization` header) |
 
 ### Authenticated intelligence endpoints
 
@@ -108,8 +108,9 @@ These endpoints require dual-key authentication. See the [authentication section
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
-| `startDate` | `YYYY-MM-DD` | Start date. Defaults to 7 days ago if omitted (unauthenticated). Wider date ranges require an `Authorization` header. |
-| `endDate` | `YYYY-MM-DD` | End date. Defaults to now if omitted. |
+| `startDate` | `YYYY-MM-DD` | Start date. Must be used together with `endDate`. Omits both for `time_period` behaviour. Wider date ranges require an `Authorization` header. |
+| `endDate` | `YYYY-MM-DD` | End date. Must be used together with `startDate`. Defaults to now if omitted. |
+| `time_period` | `integer` | Number of days to look back when `startDate`/`endDate` are not provided. Defaults to `7`. Maximum is `365`. Unauthenticated requests are limited to the guest lookback window. |
 
 #### Intelligence endpoints
 

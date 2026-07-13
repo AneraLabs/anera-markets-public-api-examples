@@ -17,6 +17,9 @@ export interface TickerHistoryResponse {
 }
 
 export interface TickerQueryParams {
+  symbol?: string;
   startDate?: string;
   endDate?: string;
+  timePeriod?: number;
+  apiKey?: string;
 }
