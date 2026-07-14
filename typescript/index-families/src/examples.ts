@@ -7,8 +7,9 @@
  * Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
  */
 
-import { getJson } from "./client.js";
-import type { MarketDataResponse, IndexFamily } from "./types.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
+import type { MarketDataResponse } from "./types.js";
 
 async function getIndices(): Promise<MarketDataResponse> {
   return getJson<MarketDataResponse>("/api/v1/indices");
@@ -53,7 +54,4 @@ async function main(): Promise<void> {
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

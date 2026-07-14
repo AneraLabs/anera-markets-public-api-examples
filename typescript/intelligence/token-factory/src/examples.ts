@@ -16,7 +16,8 @@ import type {
   TokenFactoryRankingResponse,
   TokenFactorySummaryResponse,
 } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
 
 async function getDailyRevenue(days: number): Promise<DailyRevenueResponse> {
   return getJson<DailyRevenueResponse>("/api/v1/intelligence/token-factory/daily-revenue", { days });
@@ -148,7 +149,4 @@ async function main(): Promise<void> {
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

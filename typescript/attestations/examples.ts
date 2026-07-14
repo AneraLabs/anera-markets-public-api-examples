@@ -5,7 +5,8 @@
  */
 
 import type { AttestationResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
 
 async function main(): Promise<void> {
   const eventId = "evt_123456789";
@@ -48,7 +49,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

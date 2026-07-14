@@ -9,7 +9,8 @@
  */
 
 import type { RevenueResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { formatUsd, run } from "@anera/shared-client/util";
 
 // Configuration
 const COMPANY = "anthropic"; // Company to track (e.g., "anthropic", "openai", "google")
@@ -61,12 +62,7 @@ async function main(): Promise<void> {
       }
 
       console.log(
-        `${timestamp.padEnd(15)}$${revenue
-          .toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })
-          .padStart(23)}${changeStr.padEnd(20)}`,
+        `${timestamp.padEnd(15)}${formatUsd(revenue).padStart(23)}${changeStr.padEnd(20)}`,
       );
       prevRevenue = revenue;
     } catch (err) {
@@ -79,7 +75,4 @@ async function main(): Promise<void> {
   console.log("=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

@@ -10,7 +10,8 @@
  */
 
 import type { TokenType, TokenUtilisationResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { formatNumber, run } from "@anera/shared-client/util";
 
 // Configure the token types to display
 const TOKEN_TYPES: TokenType[] = ["total", "prompt", "completion", "reasoning"];
@@ -21,13 +22,6 @@ async function getTokenUtilisation(tokenType: TokenType, timestamp?: string): Pr
   const params: Record<string, string | undefined> = { token_type: tokenType };
   if (timestamp) params.timestamp = timestamp;
   return getJson<TokenUtilisationResponse>("/api/v1/token-utilisation/company", params);
-}
-
-function formatTokens(count: number): string {
-  if (count >= 1e12) return `${(count / 1e12).toFixed(2)}T`;
-  if (count >= 1e9) return `${(count / 1e9).toFixed(2)}B`;
-  if (count >= 1e6) return `${(count / 1e6).toFixed(2)}M`;
-  return count.toLocaleString();
 }
 
 async function main(): Promise<void> {
@@ -52,7 +46,7 @@ async function main(): Promise<void> {
         const item = items[i];
         const tokenCount = item.token_count ?? 0;
         const company = item.resource_id ?? "Unknown";
-        const formatted = formatTokens(tokenCount);
+        const formatted = formatNumber(tokenCount);
         console.log(`  ${String(i + 1).padStart(2, " ")}. ${company}: ${formatted} tokens`);
       }
     } catch (err) {
@@ -64,7 +58,4 @@ async function main(): Promise<void> {
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

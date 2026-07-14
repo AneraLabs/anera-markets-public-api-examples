@@ -8,7 +8,8 @@
  */
 
 import type { AttestationResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
 
 async function testUnknownEvent(): Promise<string> {
   const eventId = "evt_unknown";
@@ -116,7 +117,4 @@ async function main(): Promise<void> {
   console.log("=".repeat(60));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

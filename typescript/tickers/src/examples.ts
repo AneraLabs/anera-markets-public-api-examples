@@ -8,22 +8,18 @@
  */
 
 import type { TickerHistoryResponse, TickerQueryParams } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
 
 async function getTickerHistory(params: TickerQueryParams = {}): Promise<TickerHistoryResponse> {
-  const { symbol, startDate, endDate, timePeriod, apiKey } = params;
+  const { symbol, startDate, endDate, timePeriod } = params;
   const queryParams: Record<string, string | number | undefined> = {};
   if (startDate !== undefined) queryParams.startDate = startDate;
   if (endDate !== undefined) queryParams.endDate = endDate;
   if (timePeriod !== undefined) queryParams.time_period = timePeriod;
-  const headers: Record<string, string> = {};
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
   return getJson<TickerHistoryResponse>(
     `/api/v1/tickers/${encodeURIComponent(symbol!)}`,
     queryParams,
-    headers,
   );
 }
 
@@ -90,12 +86,11 @@ async function main(): Promise<void> {
   // -- Extended lookback (requires API key) -----------------------------------
   console.log(`\nLast 30 days for ${symbol} (time_period=30, requires API key):`);
   console.log("-".repeat(40));
-  const apiKey = process.env.ANERA_MARKETS_API_KEY;
-  if (!apiKey) {
+  if (!process.env.ANERA_MARKETS_API_KEY) {
     console.log("  Skipping: set ANERA_MARKETS_API_KEY to query more than 7 days of history.");
   } else {
     try {
-      const resp = await getTickerHistory({ symbol, timePeriod: 30, apiKey });
+      const resp = await getTickerHistory({ symbol, timePeriod: 30 });
       const items = resp.items;
       if (items.length === 0) {
         console.log("  No data available");
@@ -113,7 +108,4 @@ async function main(): Promise<void> {
   console.log("");
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

@@ -15,7 +15,8 @@ import type {
   ModelRankingResponse,
   ModelSummaryResponse,
 } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
 
 async function getDailyRevenuePerModel(days: number): Promise<DailyRevenuePerModelResponse> {
   return getJson<DailyRevenuePerModelResponse>("/api/v1/intelligence/models/daily-revenue-per-model", { days });
@@ -149,7 +150,4 @@ async function main(): Promise<void> {
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

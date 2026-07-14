@@ -5,13 +5,10 @@
     "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": ".",
-    "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
-  },
-  "include": ["client.ts", "util.ts"]
+  }
 }

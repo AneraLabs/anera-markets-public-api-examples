@@ -7,7 +7,8 @@
  * Set ANERA_MARKETS_API_BASE_URL to your API origin (scheme + host, no trailing slash).
  */
 
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { formatNumber, run } from "@anera/shared-client/util";
 
 interface UtilisationItem {
   resource_id: string;
@@ -20,13 +21,6 @@ interface UtilisationResponse {
   timestamp: string;
   token_type: string;
   items: UtilisationItem[];
-}
-
-function formatNumber(count: number): string {
-  if (count >= 1e12) return `${(count / 1e12).toFixed(2)}T`;
-  if (count >= 1e9) return `${(count / 1e9).toFixed(2)}B`;
-  if (count >= 1e6) return `${(count / 1e6).toFixed(2)}M`;
-  return count.toLocaleString();
 }
 
 async function main(): Promise<void> {
@@ -58,7 +52,4 @@ async function main(): Promise<void> {
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

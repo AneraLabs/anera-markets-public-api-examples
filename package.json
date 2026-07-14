@@ -1,0 +1,24 @@
+{
+  "name": "anera-markets-examples",
+  "private": true,
+  "workspaces": [
+    "typescript/shared",
+    "typescript/attestations",
+    "typescript/company-revenue",
+    "typescript/index-families",
+    "typescript/indices",
+    "typescript/intelligence/model-family",
+    "typescript/intelligence/models",
+    "typescript/intelligence/token-factory",
+    "typescript/revenue-trend",
+    "typescript/tickers",
+    "typescript/token-utilisation",
+    "typescript/tokens-daily",
+    "typescript/top-models"
+  ],
+  "scripts": {
+    "build:shared": "cd typescript/shared && npm run build",
+    "build:all": "npm run build:shared && npm run build --workspaces --if-present",
+    "clean": "npm exec --workspaces -- rimraf dist"
+  }
+}

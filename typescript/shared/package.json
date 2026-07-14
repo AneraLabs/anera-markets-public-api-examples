@@ -1,7 +1,18 @@
 {
-  "name": "anera-markets-shared",
+  "name": "@anera/shared-client",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./util": {
+      "import": "./dist/util.js",
+      "types": "./dist/util.d.ts"
+    }
+  },
   "engines": {
     "node": ">=18"
   },

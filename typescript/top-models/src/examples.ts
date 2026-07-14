@@ -9,7 +9,8 @@
  */
 
 import type { RevenueResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { formatUsd, run } from "@anera/shared-client/util";
 
 // Configuration
 const TOP_N = 20; // Number of top models to display
@@ -35,17 +36,11 @@ async function main(): Promise<void> {
     const item = items[i];
     const model = (item.resource_id ?? "Unknown").substring(0, 50);
     const revenue = item.revenue_usd ?? 0;
-    const revenueStr = `$${revenue.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+    const revenueStr = formatUsd(revenue);
     console.log(`${String(i + 1).padStart(6)} ${model.padEnd(50)} ${revenueStr.padStart(23)}`);
   }
 
   console.log("=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

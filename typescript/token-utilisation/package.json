@@ -9,6 +9,9 @@
     "build": "tsc",
     "start": "node dist/examples.js"
   },
+  "dependencies": {
+    "@anera/shared-client": "*"
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "~5.6.0"

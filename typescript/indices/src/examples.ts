@@ -8,7 +8,8 @@
  */
 
 import type { MarketDataResponse, MarketIndex, IndicesSummaryResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { run } from "@anera/shared-client/util";
 
 async function getAllIndices(featured?: boolean): Promise<MarketDataResponse> {
   const params: Record<string, string> = {};
@@ -71,7 +72,4 @@ async function main(): Promise<void> {
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);

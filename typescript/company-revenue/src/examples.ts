@@ -9,7 +9,8 @@
  */
 
 import type { RevenueResponse } from "./types.js";
-import { getJson } from "./client.js";
+import { getJson } from "@anera/shared-client";
+import { formatDate, formatUsd, run } from "@anera/shared-client/util";
 
 // Configure the date range here (dynamic, like Python)
 const today = new Date();
@@ -32,56 +33,40 @@ function* dateRange(start: Date, end: Date): Generator<Date> {
   }
 }
 
-function formatDate(d: Date): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 async function main(): Promise<void> {
   const dates = Array.from(dateRange(START_DATE, END_DATE));
-  
+
   console.log(`Company Revenue Rankings (${formatDate(START_DATE)} to ${formatDate(END_DATE)})`);
   console.log("=".repeat(80));
-  
+
   for (const currentDate of dates) {
     const timestamp = formatDate(currentDate);
-    
+
     console.log(`\n${timestamp}:`);
     console.log("-".repeat(40));
-    
+
     try {
       const data = await getCompanyRevenue(timestamp);
       const items = data.items ?? [];
-      
+
       if (items.length === 0) {
         console.log("  No data available for this date");
         continue;
       }
-      
+
       // Display top N companies
       for (let i = 0; i < Math.min(TOP_N, items.length); i++) {
         const item = items[i];
-        const revenue = item.revenue_usd ?? 0;
         const company = item.resource_id ?? "Unknown";
-        console.log(
-          `  ${String(i + 1).padStart(2, " ")}. ${company}: $${revenue.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`,
-        );
+        console.log(`  ${String(i + 1).padStart(2, " ")}. ${company}: ${formatUsd(item.revenue_usd ?? 0)}`);
       }
     } catch (err) {
       const error = err as Error & { response?: { status: number; text?: string } };
       console.log(`  Error fetching data: ${error.message}`);
     }
   }
-  
+
   console.log("\n" + "=".repeat(80));
 }
 
-main().catch((err: unknown) => {
-  console.error(err);
-  process.exit(1);
-});
+run(main);
