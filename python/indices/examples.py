@@ -103,29 +103,15 @@ def main() -> None:
     except requests.HTTPError as e:
         print(f"Error: {e}")
 
-    # Single index
-    print("\nSingle index detail:")
-    print("-" * 40)
-    try:
-        idx = get_index("actdi-v3-core-index")
-        print(f"  {idx['name']} ({idx['symbol']})")
-        group = idx.get("group")
-        print(f"  Group: {group['name'] if group else 'N/A'}")
-        print(f"  Featured: {idx['featured']}")
-        start = idx.get("startDate")
-        if start:
-            print(f"  Start date: {start}")
-    except requests.HTTPError as e:
-        print(f"Error: {e}")
-
     # Historical data for the last week (free, no API key)
+    symbol="ai-coi-frontier-oss"
     today = datetime.now().date()
     one_week_ago = today - timedelta(days=7)
-    print(f"\nHistorical data for AI-TDI (last 7 days, {one_week_ago} to {today}):")
+    print(f"\nHistorical data for {symbol} (last 7 days, {one_week_ago} to {today}):")
     print("-" * 40)
     try:
         history = get_index_history(
-            symbol="AI-TDI",
+            symbol=symbol,
             start_date=str(one_week_ago),
             end_date=str(today),
         )
@@ -141,7 +127,7 @@ def main() -> None:
 
     # Historical data for the last 30 days (requires API key)
     thirty_days_ago = today - timedelta(days=30)
-    print(f"\nHistorical data for AI-TDI (last 30 days, {thirty_days_ago} to {today}):")
+    print(f"\nHistorical data for {symbol} (last 30 days, {thirty_days_ago} to {today}):")
     print("-" * 40)
     try:
         api_key = os.getenv("ANERA_MARKETS_API_KEY")
@@ -152,7 +138,7 @@ def main() -> None:
             )
         else:
             history = get_index_history(
-                symbol="AI-TDI",
+                symbol=symbol,
                 start_date=str(thirty_days_ago),
                 end_date=str(today),
                 api_key=api_key,

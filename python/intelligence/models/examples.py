@@ -4,8 +4,7 @@ Example: Model intelligence endpoints.
 Demonstrates how to fetch model analytics including daily revenue per model,
 rankings, model overviews, summaries, revenue by factory, and token ratios.
 
-Requires API key authentication. Set ANERA_MARKETS_API_ACCESS_KEY and
-ANERA_MARKETS_API_SECRET_KEY environment variables.
+Requires API key authentication. Set the ANERA_MARKETS_API_KEY environment variable.
 """
 
 from __future__ import annotations
@@ -18,10 +17,10 @@ from shared.http import get_json
 
 
 def _headers() -> dict[str, str]:
+    api_key = os.environ.get("ANERA_MARKETS_API_KEY", "")
     return {
         "Accept": "application/json",
-        "X-API-ACCESS-KEY": os.environ.get("ANERA_MARKETS_API_ACCESS_KEY", ""),
-        "X-API-SECRET-KEY": os.environ.get("ANERA_MARKETS_API_SECRET_KEY", ""),
+        "Authorization": api_key,
     }
 
 

@@ -19,8 +19,7 @@ export function buildQuery(params: Record<string, string | number | undefined>):
 
 export function authHeaders(): Record<string, string> {
   return {
-    "X-API-ACCESS-KEY": process.env.ANERA_MARKETS_API_ACCESS_KEY ?? "",
-    "X-API-SECRET-KEY": process.env.ANERA_MARKETS_API_SECRET_KEY ?? "",
+    "Authorization": process.env.ANERA_MARKETS_API_KEY ?? "",
   };
 }
 
