@@ -360,37 +360,6 @@
         }
       }
     },
-    "/api/v1/stocks": {
-      "get": {
-        "tags": [
-          "stocks"
-        ],
-        "summary": "Get All Stocks",
-        "description": "Retrieve all stocks from the stocks collection in MongoDB.\n    \n    This endpoint returns all stock documents stored in the MongoDB stocks collection.\n    Each stock includes:\n    - **id**: Stock symbol (used as _id in MongoDB)\n    - **ticker_symbol**: Related ticker symbol\n    - **stock_name**: Displayable stock name\n    \n    Stocks represent actual stock market data collected from stock market prices.",
-        "operationId": "get_all_stocks_api_v1_stocks_get",
-        "responses": {
-          "200": {
-            "description": "Stocks retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StocksResponse"
-                },
-                "example": {
-                  "stocks": [
-                    {
-                      "id": "AAPL",
-                      "ticker_symbol": "AAPL",
-                      "stock_name": "Apple Inc."
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/tokens/daily": {
       "get": {
         "tags": [
@@ -2444,9 +2413,9 @@
         "example": {
           "Deepseek Image Token Utilisation": 10.0,
           "Deepseek R1 Token Utilisation": 28.0,
-          "Deepseek Stock": 30.0,
-          "NVDA stock": 12.0,
-          "date": "2024-01-15T00:00:00"
+          "date": "2024-01-15T00:00:00",
+          "Deepseek Token Utilisation": 30.0,
+          "NVDA token utilisation": 12.0
         }
       },
       "CompositionResponse": {
@@ -2483,8 +2452,8 @@
           "composition": [
             {
               "Deepseek R1 Token Utilisation": 28.0,
-              "NVDA stock": 12.0,
-              "date": "2024-01-15T00:00:00"
+              "date": "2024-01-15T00:00:00",
+              "NVDA token utilisation": 12.0
             }
           ],
           "indexId": "china-model-performance",
@@ -3827,73 +3796,6 @@
         },
         "type": "object",
         "title": "RevokeAccessKeyResponse"
-      },
-      "Stock": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Stock symbol (used as _id in MongoDB)",
-            "example": "AAPL"
-          },
-          "ticker_symbol": {
-            "type": "string",
-            "title": "Ticker Symbol",
-            "description": "Related ticker symbol",
-            "example": "AAPL"
-          },
-          "stock_name": {
-            "type": "string",
-            "title": "Stock Name",
-            "description": "Displayable stock name",
-            "example": "Apple Inc."
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "ticker_symbol",
-          "stock_name"
-        ],
-        "title": "Stock",
-        "description": "Stock information from MongoDB.",
-        "example": {
-          "id": "AAPL",
-          "stock_name": "Apple Inc.",
-          "ticker_symbol": "AAPL"
-        }
-      },
-      "StocksResponse": {
-        "properties": {
-          "stocks": {
-            "items": {
-              "$ref": "#/components/schemas/Stock"
-            },
-            "type": "array",
-            "title": "Stocks",
-            "description": "List of all available stocks"
-          }
-        },
-        "type": "object",
-        "required": [
-          "stocks"
-        ],
-        "title": "StocksResponse",
-        "description": "Response containing all stocks from MongoDB.",
-        "example": {
-          "stocks": [
-            {
-              "id": "AAPL",
-              "stock_name": "Apple Inc.",
-              "ticker_symbol": "AAPL"
-            },
-            {
-              "id": "GOOGL",
-              "stock_name": "Alphabet Inc.",
-              "ticker_symbol": "GOOGL"
-            }
-          ]
-        }
       },
       "TickerValuePoint": {
         "properties": {
