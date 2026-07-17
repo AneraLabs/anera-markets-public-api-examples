@@ -360,37 +360,6 @@
         }
       }
     },
-    "/api/v1/stocks": {
-      "get": {
-        "tags": [
-          "stocks"
-        ],
-        "summary": "Get All Stocks",
-        "description": "Retrieve all stocks from the stocks collection in MongoDB.\n    \n    This endpoint returns all stock documents stored in the MongoDB stocks collection.\n    Each stock includes:\n    - **id**: Stock symbol (used as _id in MongoDB)\n    - **ticker_symbol**: Related ticker symbol\n    - **stock_name**: Displayable stock name\n    \n    Stocks represent actual stock market data collected from stock market prices.",
-        "operationId": "get_all_stocks_api_v1_stocks_get",
-        "responses": {
-          "200": {
-            "description": "Stocks retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StocksResponse"
-                },
-                "example": {
-                  "stocks": [
-                    {
-                      "id": "AAPL",
-                      "ticker_symbol": "AAPL",
-                      "stock_name": "Apple Inc."
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/tokens/daily": {
       "get": {
         "tags": [
