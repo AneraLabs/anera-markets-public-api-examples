@@ -32,10 +32,11 @@ async function main(): Promise<void> {
   // -- Featured indices --------------------------------------------------------
   console.log("\nFeatured indices:");
   console.log("-".repeat(40));
+  let featured: MarketDataResponse | null = null;
   try {
-    const data = await getAllIndices(true);
-    console.log(`Last updated: ${data.lastUpdated}`);
-    for (const idx of data.indices) {
+    featured = await getAllIndices(true);
+    console.log(`Last updated: ${featured.lastUpdated}`);
+    for (const idx of featured.indices) {
       console.log(`  ${idx.symbol} - ${idx.name}`);
       console.log(`    Value: ${idx.value.toFixed(2)} ${idx.currency}`);
       console.log(`    Change (1D/1W/1M/3M): ${idx.changeDay}% / ${idx.changeWeek}% / ${idx.changeMonth}% / ${idx.change3Month}%`);
@@ -58,15 +59,19 @@ async function main(): Promise<void> {
   // -- Single index detail -----------------------------------------------------
   console.log("\nSingle index detail (example):");
   console.log("-".repeat(40));
-  try {
-    const idx = await getIndexById("actdi-v3-core-index");
-    console.log(`  ${idx.name} (${idx.symbol})`);
-    console.log(`  Description: ${idx.description.substring(0, 100)}...`);
-    console.log(`  Group: ${idx.group?.name ?? "N/A"}`);
-    console.log(`  Featured: ${idx.featured}`);
-    console.log(`  Start date: ${idx.startDate}`);
-  } catch (err) {
-    console.error(`Error: ${(err as Error).message}`);
+  if (featured === null || featured.indices.length === 0) {
+    console.log("  No featured indices available; skipping detail lookup.");
+  } else {
+    try {
+      const idx = await getIndexById(featured.indices[0].id);
+      console.log(`  ${idx.name} (${idx.symbol})`);
+      console.log(`  Description: ${idx.description.substring(0, 100)}...`);
+      console.log(`  Group: ${idx.group?.name ?? "N/A"}`);
+      console.log(`  Featured: ${idx.featured}`);
+      console.log(`  Start date: ${idx.startDate}`);
+    } catch (err) {
+      console.error(`Error: ${(err as Error).message}`);
+    }
   }
 
   console.log("\n" + "=".repeat(80));
