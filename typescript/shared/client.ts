@@ -2,6 +2,9 @@
  * Shared HTTP client for anera.markets public API.
  *
  * This is the single source of truth. Import from @anera/shared-client.
+ *
+ * API keys (`iai_sk_...`) are sent as the raw `Authorization` header value
+ * (or via the `X-API-Key` header) and must never carry a `Bearer` prefix.
  */
 
 export type HttpParams = Record<string, string | number | undefined>;
@@ -27,7 +30,7 @@ function buildHeaders(extra: ExtraHeaders = {}): Record<string, string> {
   const headers: Record<string, string> = { Accept: "application/json" };
   const apiKey = process.env.ANERA_MARKETS_API_KEY;
   if (apiKey) {
-    headers["Authorization"] = `Bearer ${apiKey}`;
+    headers["Authorization"] = apiKey;
   }
   return { ...headers, ...extra };
 }

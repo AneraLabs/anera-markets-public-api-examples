@@ -1,7 +1,7 @@
 /**
  * Request/response shapes for the ticker endpoint.
  *
- * GET /api/v1/tickers/{symbol}
+ * GET /api/v1/tickers/{index_id}
  */
 
 export interface TickerItem {
@@ -17,9 +17,8 @@ export interface TickerHistoryResponse {
 }
 
 export interface TickerQueryParams {
-  symbol?: string;
+  indexId?: string;
   startDate?: string;
   endDate?: string;
   timePeriod?: number;
-  apiKey?: string;
 }

@@ -38,28 +38,27 @@ def get_indices_summary() -> dict[str, Any]:
 
 
 def get_index(index_id: str) -> dict[str, Any]:
-    """Get detailed information for a single index."""
+    """Get detailed information for a single index.
+
+    Takes the exact index id (e.g., 'ai-tdi-v1'); this endpoint requires an
+    exact match, so bare ids like 'ai-tdi' will 404 here.
+    """
     return get_json(f"/api/v1/indices/{index_id}")
 
 
 def get_index_history(
-    symbol: str,
+    index_id: str,
     *,
     start_date: str,
     end_date: str,
     api_key: str | None = None,
 ) -> dict[str, Any]:
-    """Get historical ticker values for an index symbol over a date range.
+    """Get historical ticker values for an index over a date range.
 
-    Uses the public tickers endpoint. Unauthenticated requests are limited
-    to 7 days of history. Provide an API key for wider ranges (up to 365 days).
-
-    Args:
-        symbol: Ticker symbol (e.g., 'AI-TDI', 'ACTDI').
-        start_date: Start date in YYYY-MM-DD format (inclusive).
-        end_date: End date in YYYY-MM-DD format (inclusive).
-        api_key: Optional API key (prefixed with 'iai_sk_'). Required for
-            ranges wider than 7 days.
+    Uses the public tickers endpoint, which takes the index id (e.g. 'ai-tdi-v1')
+    and requires both startDate and endDate. Guests can currently read the full
+    window; an API key is optional and sent as the raw Authorization header
+    value when provided.
 
     Returns a response with 'items' list of {timestamp, value} dicts.
     """
@@ -67,7 +66,7 @@ def get_index_history(
     if api_key:
         req_headers["Authorization"] = api_key
     return get_json(
-        f"/api/v1/tickers/{symbol}",
+        f"/api/v1/tickers/{index_id}",
         {"startDate": start_date, "endDate": end_date},
         headers=req_headers,
     )
@@ -103,15 +102,15 @@ def main() -> None:
     except requests.HTTPError as e:
         print(f"Error: {e}")
 
-    # Historical data for the last week (free, no API key)
-    symbol="ai-coi-frontier-oss"
+    # Historical data for the last week
+    index_id = "ai-coi-frontier-oss-v1"
     today = datetime.now().date()
     one_week_ago = today - timedelta(days=7)
-    print(f"\nHistorical data for {symbol} (last 7 days, {one_week_ago} to {today}):")
+    print(f"\nHistorical data for {index_id} (last 7 days, {one_week_ago} to {today}):")
     print("-" * 40)
     try:
         history = get_index_history(
-            symbol=symbol,
+            index_id=index_id,
             start_date=str(one_week_ago),
             end_date=str(today),
         )
@@ -125,31 +124,25 @@ def main() -> None:
     except requests.HTTPError as e:
         print(f"Error: {e}")
 
-    # Historical data for the last 30 days (requires API key)
+    # Historical data for the last 30 days
     thirty_days_ago = today - timedelta(days=30)
-    print(f"\nHistorical data for {symbol} (last 30 days, {thirty_days_ago} to {today}):")
+    print(f"\nHistorical data for {index_id} (last 30 days, {thirty_days_ago} to {today}):")
     print("-" * 40)
     try:
-        api_key = os.getenv("ANERA_MARKETS_API_KEY")
-        if not api_key:
-            print(
-                "  Skipping: set ANERA_MARKETS_API_KEY environment variable to "
-                "query more than 7 days of history."
-            )
-        else:
-            history = get_index_history(
-                symbol=symbol,
-                start_date=str(thirty_days_ago),
-                end_date=str(today),
-                api_key=api_key,
-            )
-            items = history.get("items") or []
-            if not items:
-                print("  No data points returned.")
-            for item in items:
-                ts = item.get("timestamp", "?")
-                val = item.get("value")
-                print(f"  {ts}: {val:.2f}" if val is not None else f"  {ts}: N/A")
+        api_key = os.getenv("ANERA_MARKETS_API_KEY")  # optional
+        history = get_index_history(
+            index_id=index_id,
+            start_date=str(thirty_days_ago),
+            end_date=str(today),
+            api_key=api_key,
+        )
+        items = history.get("items") or []
+        if not items:
+            print("  No data points returned.")
+        for item in items:
+            ts = item.get("timestamp", "?")
+            val = item.get("value")
+            print(f"  {ts}: {val:.2f}" if val is not None else f"  {ts}: N/A")
     except requests.HTTPError as e:
         print(f"Error: {e}")
 

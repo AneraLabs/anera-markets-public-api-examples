@@ -1,6 +1,6 @@
 # [anera.markets](https://anera.markets) public API examples
 
-This repository contains small, runnable examples for the **anera.markets** public [HTTP API](https://api.anera.markets/docs/v1/public): listing models, token factories, and companies; daily **revenue** and **token utilisation** rankings by resource type; **ticker** historical values; prediction market **attestations**; market indices; and intelligence analytics.
+This repository contains small, runnable examples for the **anera.markets** public [HTTP API](https://api.anera.markets/docs): listing models, token factories, and companies; daily **revenue** and **token utilisation** rankings by resource type; **ticker** historical values; prediction market **attestations**; market indices, **index families**, and **daily token counters**; and intelligence analytics.
 
 The machine-readable contract lives in [`openapi.json`](openapi.json) (OpenAPI 3.1). Use it with codegen tools, Postman, or any OpenAPI-aware client if you prefer not to hand-roll requests.
 
@@ -20,20 +20,24 @@ See [`.env.example`](.env.example) for all supported variables.
 
 ## Authentication
 
-Most public endpoints require no authentication. Some features require a single **API key** (prefixed `iai_sk_`), sent via the `Authorization` header:
+Most public endpoints need no authentication. Some features use a single **API key** (prefixed `iai_sk_`):
 
 | Header | Env Variable |
 | ------ | ------------ |
-| `Authorization` | `ANERA_MARKETS_API_KEY` |
+| `Authorization` (raw key value, no `Bearer` prefix) or `X-API-Key` | `ANERA_MARKETS_API_KEY` |
 
-Obtain a key from your [Anera markets Account dashboard](https://anera.markets/account). Without a valid key, authenticated requests return `401 Unauthorized`.
+Keys are obtained from the [Anera markets Account dashboard](https://anera.markets/account) and managed via the session-auth endpoints `POST/GET/DELETE /api/v1/user/access-keys`; at most one active key per user.
+
+**Important:** send the key as-is — `Authorization: iai_sk_...` or `X-API-Key: iai_sk_...`. A `Bearer ` prefix is interpreted as a JWT and returns `401 Invalid token`; an unknown or revoked key returns `401 Invalid API key`.
+
+> The API currently serves unauthenticated guests within the published data windows, so a key is not strictly required today. Any key you do send must still be valid.
 
 ### API key usage
 
-- **Intelligence endpoints** (`/api/v1/intelligence/...`) — require an API key.
-- **Extended ticker history** — query ticker data beyond the free 7-day window.
+- **Intelligence endpoints** (`/api/v1/intelligence/...`) — the documented API-key feature set.
+- **Ticker history** — accepts a key for extended lookback.
 
-The Python `tickers` and TypeScript `intelligence` examples use this mechanism. Without a key, those demos skip with a message.
+The Python `tickers`, `indices`, and `intelligence` examples and the TypeScript `tickers` and `intelligence` examples send the key when `ANERA_MARKETS_API_KEY` is set; the intelligence examples skip with a message when no key is set.
 
 ## API Endpoints
 
@@ -50,11 +54,15 @@ The Python `tickers` and TypeScript `intelligence` examples use this mechanism. 
 | `GET` | `/api/v1/indices` | List market indices (optional `featured` filter) |
 | `GET` | `/api/v1/indices/summary` | Summary statistics (models count, token spend) |
 | `GET` | `/api/v1/indices/{index_id}` | Detailed information for a single index |
-| `GET` | `/api/v1/tickers/{symbol}` | Historical ticker values (7 days free; use `time_period` for custom lookback or `startDate`/`endDate` for explicit ranges; wider ranges require `Authorization` header) |
+| `GET` | `/api/v1/tickers/{index_id}` | Historical ticker values. The path takes the index id (e.g. `ai-tdi` or version-pinned `ai-tdi-v1`), not the ticker symbol. `time_period` lookback defaults to 7, max 365. |
+| `GET` | `/api/v1/index-families` | Index families with member tickers and primary index details (value, trend) |
+| `GET` | `/api/v1/tokens/daily` | Cumulative token counter and previous-UTC-day delta |
+
+Additional public endpoints (`/api/v1/models`, `/api/v1/providers`, `/api/v1/models/revenue`, `/api/v1/models/token-utilisation`, `/api/v1/trace/{index_id}/composition`, `/api/v1/trace/{index_id}/by-date`, `/api/v1/chart-data/{chart_id}`) are documented in `openapi.json`.
 
 ### Authenticated intelligence endpoints
 
-These endpoints require dual-key authentication. See the [authentication section](#authentication).
+These endpoints are the documented API-key feature set. See the [authentication section](#authentication).
 
 #### Model intelligence
 
@@ -108,17 +116,17 @@ These endpoints require dual-key authentication. See the [authentication section
 
 | Parameter | Type | Description |
 | --------- | ---- | ----------- |
-| `startDate` | `YYYY-MM-DD` | Start date. Must be used together with `endDate`. Omits both for `time_period` behaviour. Wider date ranges require an `Authorization` header. |
-| `endDate` | `YYYY-MM-DD` | End date. Must be used together with `startDate`. Defaults to now if omitted. |
-| `time_period` | `integer` | Number of days to look back when `startDate`/`endDate` are not provided. Defaults to `7`. Maximum is `365`. Unauthenticated requests are limited to the guest lookback window. |
+| `startDate` | `YYYY-MM-DD` | Start date. Must be used together with `endDate` (providing only one of the two returns 400). Omit both for `time_period` behaviour. |
+| `endDate` | `YYYY-MM-DD` | End date. Must be used together with `startDate` (providing only one of the two returns 400). |
+| `time_period` | `integer` | Number of days to look back when `startDate`/`endDate` are not provided. Defaults to `7`. Maximum is `365` (at most 10,000 points returned). Guests can currently read the full window; a key is accepted but not required. |
 
 #### Intelligence endpoints
 
 | Parameter | Description |
 | --------- | ----------- |
-| `days` | Number of days to aggregate over. |
-| `metric` | Sort metric: `revenue`, `tokens`, or `utilisation` (factory rankings only). |
-| `limit` | Maximum results to return. |
+| `days` | Number of trailing days to aggregate over. Model overviews, summaries, and breakdowns default to 7 (1–90). Family/factory `daily-revenue` and `rankings` default to 30 (1–365). |
+| `metric` | Sort metric: `revenue` or `tokens` for model and model-family rankings; `revenue` or `utilisation` for token-factory rankings. |
+| `limit` | Maximum results to return. Rankings only; default 50 (1–500). |
 
 #### Path parameter `resource_type`
 
@@ -132,6 +140,9 @@ One of: `token-factory`, `model`, `company`.
 - **Ticker history:** `{ symbol, start_date, end_date, items: [{ timestamp, value }] }`
 - **Indices:** `{ indices: [{ id, name, symbol, value, currency, ... }], lastUpdated }`
 - **Index summary:** `{ models_count, token_spend }`
+- **Index families:** `[{ family_id, family_name, family_description, family_tickers, primary_index?: { index_id, index_name, symbol, index_value, trend } }]`
+- **Daily tokens:** `{ totalCount, delta, lastUpdated }` (all strings)
+- **Rankings:** `{ metric, from_date, to_date, rows: [{ <subject>_id, <subject>_name, revenue_usd, token_count, rank }] }`
 
 See `openapi.json` for full schemas and validation rules.
 
@@ -155,10 +166,10 @@ All our data is made available t+1. This means that Monday's data can only be ac
 | **Revenue trend** | Track company revenue changes over time | [python/revenue-trend/examples.py](python/revenue-trend/examples.py) | [typescript/revenue-trend/src/examples.ts](typescript/revenue-trend/src/examples.ts) |
 | **Token utilisation** | Token consumption by type (total/prompt/completion/reasoning) | [python/token-utilisation/examples.py](python/token-utilisation/examples.py) | [typescript/token-utilisation/src/examples.ts](typescript/token-utilisation/src/examples.ts) |
 | **Company revenue** | Top company revenue rankings for a date range | [python/company-revenue/examples.py](python/company-revenue/examples.py) | [typescript/company-revenue/src/examples.ts](typescript/company-revenue/src/examples.ts) |
-| **Indices** | Market indices, summary stats, single index detail, historical data (Python only) | [python/indices/examples.py](python/indices/examples.py) | [typescript/indices/src/examples.ts](typescript/indices/src/examples.ts) |
+| **Indices** | Market indices, summary stats, single index detail, and historical ticker data (the tickers endpoint requires the index id) | [python/indices/examples.py](python/indices/examples.py) | [typescript/indices/src/examples.ts](typescript/indices/src/examples.ts) |
 | **Tickers** | Historical ticker price data | [python/tickers/examples.py](python/tickers/examples.py) | [typescript/tickers/src/examples.ts](typescript/tickers/src/examples.ts) |
-| **Index families** | Index families grouped by symbol prefix (derived from indices) | [python/index-families/examples.py](python/index-families/examples.py) | [typescript/index-families/src/examples.ts](typescript/index-families/src/examples.ts) |
-| **Daily tokens** | Total token count from company utilisation endpoint | [python/tokens-daily/examples.py](python/tokens-daily/examples.py) | [typescript/tokens-daily/src/examples.ts](typescript/tokens-daily/src/examples.ts) |
+| **Index families** | Index families via `GET /api/v1/index-families` (family metadata, member tickers, primary index with value and trend) | [python/index-families/examples.py](python/index-families/examples.py) | [typescript/index-families/src/examples.ts](typescript/index-families/src/examples.ts) |
+| **Daily tokens** | Cumulative token counter and previous-day delta via `GET /api/v1/tokens/daily` | [python/tokens-daily/examples.py](python/tokens-daily/examples.py) | [typescript/tokens-daily/src/examples.ts](typescript/tokens-daily/src/examples.ts) |
 
 ### Authenticated endpoints (API key required)
 
@@ -198,7 +209,7 @@ python indices/examples.py
 
 ### Authenticated Python examples
 
-The intelligence examples require an API key:
+The intelligence examples exercise the API-key path (set the key to run them; the API currently also answers unauthenticated requests, so the demos skip with a message instead of failing when no key is set):
 
 ```bash
 export ANERA_MARKETS_API_KEY='iai_sk_your_access_key'
@@ -211,7 +222,7 @@ python intelligence/token-factory/examples.py
 
 ## TypeScript (Node.js)
 
-**Requirements:** Node.js **18+** (global `fetch`) and npm. Each project ships its own `package.json` with the TypeScript compiler pinned as a dev dependency.
+**Requirements:** Node.js **18+** (global `fetch`) and npm. Each dedicated example project ships its own `package.json` with the TypeScript compiler pinned as a dev dependency (the general examples compile from the root `tsconfig.json`).
 
 [`typescript/general-examples/types.ts`](typescript/general-examples/types.ts) defines **request** query types (`RevenueQueryParams`, `TokenUtilisationQueryParams`) and **response** types (`ModelItem`, `RevenueResponse`, `TokenUtilisationResponse`, `AttestationResponse`, row types, etc.) aligned with [`openapi.json`](openapi.json).
 
@@ -226,6 +237,8 @@ export ANERA_MARKETS_API_BASE_URL='https://api.anera.markets'
 npm start
 # runs: node dist/examples.js
 ```
+
+The general examples compile from the root `tsconfig.json` via the root package's `build`/`start` scripts.
 
 Each dedicated example directory is a standalone project:
 
@@ -255,7 +268,7 @@ In the browser, you can port the same types and adapt the `fetch` calls, subject
 
 - **`ANERA_MARKETS_API_BASE_URL` not set:** Examples default to `https://api.anera.markets`. Export the variable to override.
 - **`PYTHONPATH` not set (Python):** The Python examples share a common `shared/` module. Set `PYTHONPATH=.` when running examples from the `python/` directory.
-- **HTTP 401 Unauthorized:** You hit an authenticated endpoint without valid keys. See the [authentication section](#authentication).
+- **HTTP 401 Unauthorized:** You sent an API key in the wrong format (for example `Bearer iai_sk_...`) or the key is unknown/revoked. Send the key raw in `Authorization` or via `X-API-Key`. See the [authentication section](#authentication).
 - **HTTP 4xx / 5xx:** The TypeScript examples surface status codes and body text in thrown `Error`s. For Python, `requests` raises `HTTPError`; wrap or log `response.text` for details.
 - **404 Not Found:** The endpoint or resource does not exist. Check that the path matches the [endpoint table](#api-endpoints) above and that path/query values are valid (e.g. `resource_type` must be `token-factory`, `model`, or `company`).
 - **Empty results:** The API returns `items: []` when no data is available for the requested date/resource combination. This is expected for future dates or recently deleted resources.

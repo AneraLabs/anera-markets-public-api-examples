@@ -2,48 +2,50 @@
   "openapi": "3.1.0",
   "info": {
     "title": "anera markets api",
-    "description": "API for accessing AneraLabs anera.markets data",
+    "description": "API for accessing AneraLabs anera.markets data Unauthenticated guests are currently served within the published data windows, but any API key sent must be valid (401 otherwise).",
     "version": "0.1.0"
   },
+  "servers": [
+    {
+      "url": "https://api.anera.markets"
+    }
+  ],
   "paths": {
     "/api/v1/index-families": {
       "get": {
-        "tags": [
-          "index-families"
-        ],
-        "summary": "Get Index Families",
         "description": "Retrieve index families with family metadata, family tickers, and primary index details.\n\n    This endpoint returns:\n    - family_name and family_description from MongoDB index_groups\n    - family_tickers from visible indices that belong to each family\n    - primary_index details from index_groups.primary_index mapped to indices.id\n    - primary_index trend (up, down, or neutral) derived from the latest ticker window in ClickHouse",
         "operationId": "get_index_families_api_v1_index_families_get",
         "responses": {
           "200": {
-            "description": "Index families retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
                     "$ref": "#/components/schemas/IndexFamily"
                   },
-                  "type": "array",
-                  "title": "Response Get Index Families Api V1 Index Families Get"
+                  "title": "Response Get Index Families Api V1 Index Families Get",
+                  "type": "array"
                 }
               }
-            }
+            },
+            "description": "Index families retrieved successfully"
           }
-        }
+        },
+        "summary": "Get Index Families",
+        "tags": [
+          "index-families"
+        ]
       }
     },
     "/api/v1/indices": {
       "get": {
-        "tags": [
-          "indices"
-        ],
-        "summary": "Get All Indices (Full Data)",
         "description": "Retrieve all available indices with their complete market data.\n    \n    This endpoint returns full index information including:\n    - All indices with current values and performance metrics (calculated from ClickHouse ticker data)\n    - No price history series in list responses (use chart or ticker endpoints for historical prices)\n    - Composition history is omitted on list responses; use GET /api/v1/indices/{index_id} for composition history\n    - Group/category information (from MongoDB)\n    - Featured articles and methodology links (from MongoDB)\n    \n    **Filtering:**\n    - Pass `?featured=true` to return only curated/featured indices (e.g. for homepage carousel)\n    - Pass `?featured=false` or omit the parameter to return all visible indices\n    - Passing any value other than `true` or `false` returns a `400` error\n    \n    **Data Sources:**\n    - **MongoDB**: Stores index metadata (name, description, group, featured articles, etc.)\n    - **ClickHouse**: Stores ticker price data used to calculate performance metrics\n    - **Trace Collection**: Stores historical composition data\n    \n    Use this endpoint when you need complete index data (e.g., for index exploration pages).\n    For simplified ticker data (e.g., carousel), use /api/v1/tickers/{symbol} instead.",
         "operationId": "get_all_indices_api_v1_indices_get",
         "parameters": [
           {
-            "name": "featured",
+            "description": "Filter by featured status. Pass 'true' or 'false'.",
             "in": "query",
+            "name": "featured",
             "required": false,
             "schema": {
               "anyOf": [
@@ -56,602 +58,571 @@
               ],
               "description": "Filter by featured status. Pass 'true' or 'false'.",
               "title": "Featured"
-            },
-            "description": "Filter by featured status. Pass 'true' or 'false'."
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Indices retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MarketDataResponse"
                 }
               }
-            }
+            },
+            "description": "Indices retrieved successfully"
           },
           "400": {
-            "description": "Invalid value for 'featured' query parameter",
             "content": {
               "application/json": {
                 "example": {
                   "detail": "Invalid value for 'featured': 'banana'. Must be 'true' or 'false'."
                 }
               }
-            }
+            },
+            "description": "Invalid value for 'featured' query parameter"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get All Indices (Full Data)",
+        "tags": [
+          "indices"
+        ]
       }
     },
     "/api/v1/indices/summary": {
       "get": {
-        "tags": [
-          "indices"
-        ],
-        "summary": "Get Indices Summary",
         "description": "Retrieve summary statistics for indices.\n\n    Returns high-level metrics including total model count and token spend.",
         "operationId": "get_indices_summary_api_v1_indices_summary_get",
         "responses": {
           "200": {
-            "description": "Indices summary retrieved successfully",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IndicesSummaryResponse"
-                },
                 "example": {
                   "models_count": "121",
                   "token_spend": "180T"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/IndicesSummaryResponse"
                 }
               }
-            }
+            },
+            "description": "Indices summary retrieved successfully"
           }
-        }
+        },
+        "summary": "Get Indices Summary",
+        "tags": [
+          "indices"
+        ]
       }
     },
     "/api/v1/indices/{index_id}": {
       "get": {
-        "tags": [
-          "indices"
-        ],
-        "summary": "Get Index by ID",
         "description": "Retrieve detailed information about a specific index by its ID.\n    \n    Returns complete index information including:\n    - Current value and all performance metrics (calculated from ClickHouse ticker data)\n    - Full composition history from start date (from trace collection)\n    - No price history series (use chart or ticker endpoints for historical prices)\n    - Group information (from MongoDB)\n    - Featured articles and methodology documentation (from MongoDB)\n    \n    **Data Sources:**\n    - **MongoDB**: Stores index metadata (name, description, group, featured articles, etc.)\n    - **ClickHouse**: Stores ticker price data used to calculate performance metrics\n    - **Trace Collection**: Stores historical composition data\n    \n    **Example IDs:**\n    - `china-model-performance` - China TDI\n    - `us-model-performance` - US TDI\n    - `europe-model-performance` - Europe TDI\n    - `oss-tdi` - OSS index\n    - `openai-tdi` - OpenAI TDI\n    - `anthropic-tdi` - Anthropic TDI",
         "operationId": "get_index_by_id_api_v1_indices__index_id__get",
         "parameters": [
           {
-            "name": "index_id",
+            "description": "Unique identifier of the index",
+            "example": "china-model-performance",
             "in": "path",
+            "name": "index_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Unique identifier of the index",
-              "title": "Index Id"
-            },
-            "description": "Unique identifier of the index",
-            "example": "china-model-performance"
+              "title": "Index Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Index found and returned successfully",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarketIndex"
-                },
                 "example": {
-                  "id": "china-model-performance",
-                  "name": "China TDI",
-                  "symbol": "CNTDI",
-                  "value": 2847.32,
-                  "currency": "CNY",
                   "change": 0.12,
+                  "change3Month": 8.23,
                   "changeAbsolute": 3.42,
                   "changeDay": 0.12,
-                  "changeWeek": 0.85,
                   "changeMonth": 2.45,
-                  "change3Month": 8.23,
-                  "timestamp": "2024-01-15T12:00:00",
-                  "group": {
-                    "id": "token-utilisation",
-                    "name": "Token Utilisation Based Indexes",
-                    "description": "Benchmarks built primarily on model token consumption and utilization signals."
-                  },
+                  "changeWeek": 0.85,
+                  "currency": "CNY",
                   "description": "The China TDI tracks the utilization and performance of AI models developed and deployed in China.",
+                  "featured": false,
+                  "group": {
+                    "description": "Benchmarks built primarily on model token consumption and utilization signals.",
+                    "id": "token-utilisation",
+                    "name": "Token Utilisation Based Indexes"
+                  },
+                  "id": "china-model-performance",
+                  "name": "China TDI",
                   "startDate": "2023-01-15",
-                  "featured": false
+                  "symbol": "CNTDI",
+                  "timestamp": "2024-01-15T12:00:00",
+                  "value": 2847.32
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MarketIndex"
                 }
               }
-            }
+            },
+            "description": "Index found and returned successfully"
           },
           "404": {
-            "description": "Index not found",
             "content": {
               "application/json": {
                 "example": {
                   "detail": "Index with id 'invalid-id' not found"
                 }
               }
-            }
+            },
+            "description": "Index not found"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get Index by ID",
+        "tags": [
+          "indices"
+        ]
       }
     },
     "/api/v1/models": {
       "get": {
-        "tags": [
-          "models"
-        ],
-        "summary": "Get All Model IDs",
         "operationId": "get_all_models_api_v1_models_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelsResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           }
-        }
+        },
+        "summary": "Get All Model IDs",
+        "tags": [
+          "models"
+        ]
       }
     },
     "/api/v1/providers": {
       "get": {
-        "tags": [
-          "models"
-        ],
-        "summary": "Get All Providers",
         "operationId": "get_all_providers_api_v1_providers_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProvidersResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           }
-        }
+        },
+        "summary": "Get All Providers",
+        "tags": [
+          "models"
+        ]
       }
     },
     "/api/v1/models/token-utilisation": {
       "get": {
-        "tags": [
-          "models"
-        ],
-        "summary": "Get Token Utilisation Metrics",
         "operationId": "get_token_utilisation_api_v1_models_token_utilisation_get",
         "parameters": [
           {
-            "name": "time-period",
+            "description": "Time period",
+            "example": "1M",
             "in": "query",
+            "name": "time-period",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Time period",
-              "title": "Time-Period"
-            },
-            "description": "Time period",
-            "example": "1M"
+              "title": "Time-Period",
+              "type": "string"
+            }
           },
           {
-            "name": "models",
+            "description": "Comma-separated model slugs",
+            "example": "gpt-4o,claude-3.5-sonnet",
             "in": "query",
+            "name": "models",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Comma-separated model slugs",
-              "title": "Models"
-            },
-            "description": "Comma-separated model slugs",
-            "example": "gpt-4o,claude-3.5-sonnet"
+              "title": "Models",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__models__schema__TokenUtilisationResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "400": {
             "description": "Invalid request parameters"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get Token Utilisation Metrics",
+        "tags": [
+          "models"
+        ]
       }
     },
     "/api/v1/models/revenue": {
       "get": {
-        "tags": [
-          "models"
-        ],
-        "summary": "Get Revenue Metrics",
         "operationId": "get_revenue_api_v1_models_revenue_get",
         "parameters": [
           {
-            "name": "time-period",
+            "description": "Time period",
+            "example": "1M",
             "in": "query",
+            "name": "time-period",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Time period",
-              "title": "Time-Period"
-            },
-            "description": "Time period",
-            "example": "1M"
+              "title": "Time-Period",
+              "type": "string"
+            }
           },
           {
-            "name": "models",
+            "description": "Comma-separated model slugs",
+            "example": "gpt-4o,claude-3.5-sonnet",
             "in": "query",
+            "name": "models",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Comma-separated model slugs",
-              "title": "Models"
-            },
-            "description": "Comma-separated model slugs",
-            "example": "gpt-4o,claude-3.5-sonnet"
+              "title": "Models",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__models__schema__RevenueResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "400": {
             "description": "Invalid request parameters"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
-      }
-    },
-    "/api/v1/stocks": {
-      "get": {
+        },
+        "summary": "Get Revenue Metrics",
         "tags": [
-          "stocks"
-        ],
-        "summary": "Get All Stocks",
-        "description": "Retrieve all stocks from the stocks collection in MongoDB.\n    \n    This endpoint returns all stock documents stored in the MongoDB stocks collection.\n    Each stock includes:\n    - **id**: Stock symbol (used as _id in MongoDB)\n    - **ticker_symbol**: Related ticker symbol\n    - **stock_name**: Displayable stock name\n    \n    Stocks represent actual stock market data collected from stock market prices.",
-        "operationId": "get_all_stocks_api_v1_stocks_get",
-        "responses": {
-          "200": {
-            "description": "Stocks retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StocksResponse"
-                },
-                "example": {
-                  "stocks": [
-                    {
-                      "id": "AAPL",
-                      "ticker_symbol": "AAPL",
-                      "stock_name": "Apple Inc."
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
+          "models"
+        ]
       }
     },
     "/api/v1/tokens/daily": {
       "get": {
-        "tags": [
-          "tokens"
-        ],
-        "summary": "Get Daily Token Counters",
         "description": "Retrieve token ingestion counters used by the frontend's live counter.\n\n    Response includes:\n    - totalCount: cumulative tokens ingested till date\n    - delta: previous completed UTC day's ingested tokens\n    - lastUpdated: ISO 8601 UTC timestamp of computation",
         "operationId": "get_daily_tokens_api_v1_tokens_daily_get",
         "responses": {
           "200": {
-            "description": "Daily token counters retrieved successfully",
             "content": {
               "application/json": {
+                "example": {
+                  "delta": "100000000",
+                  "lastUpdated": "2026-03-27T00:14:00.000Z",
+                  "totalCount": "60004601111"
+                },
                 "schema": {
                   "$ref": "#/components/schemas/DailyTokensResponse"
-                },
-                "example": {
-                  "totalCount": "60004601111",
-                  "delta": "100000000",
-                  "lastUpdated": "2026-03-27T00:14:00.000Z"
                 }
               }
-            }
+            },
+            "description": "Daily token counters retrieved successfully"
           },
           "503": {
-            "description": "Underlying data store unavailable",
             "content": {
               "application/json": {
                 "example": {
                   "detail": "Token data store unavailable"
                 }
               }
-            }
+            },
+            "description": "Underlying data store unavailable"
           }
-        }
+        },
+        "summary": "Get Daily Token Counters",
+        "tags": [
+          "tokens"
+        ]
       }
     },
     "/api/v1/trace/{index_id}/composition": {
       "get": {
-        "tags": [
-          "trace"
-        ],
-        "summary": "Get Index Composition by Period",
         "operationId": "get_index_composition_api_v1_trace__index_id__composition_get",
         "parameters": [
           {
-            "name": "index_id",
+            "description": "Unique identifier of the index",
+            "example": "china-model-performance",
             "in": "path",
+            "name": "index_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Unique identifier of the index",
-              "title": "Index Id"
-            },
-            "description": "Unique identifier of the index",
-            "example": "china-model-performance"
+              "title": "Index Id",
+              "type": "string"
+            }
           },
           {
-            "name": "period",
+            "description": "Time period for filtering composition data",
+            "example": "1M",
             "in": "query",
+            "name": "period",
             "required": false,
             "schema": {
-              "type": "string",
-              "pattern": "^(1W|1M|3M|6M|1Y|3Y|5Y|10Y|ALL)$",
-              "description": "Time period for filtering composition data",
               "default": "ALL",
-              "title": "Period"
-            },
-            "description": "Time period for filtering composition data",
-            "example": "1M"
+              "description": "Time period for filtering composition data",
+              "pattern": "^(1W|1M|3M|6M|1Y|3Y|5Y|10Y|ALL)$",
+              "title": "Period",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CompositionResponse"
                 }
               }
-            }
-          },
-          "404": {
-            "description": "Index not found"
+            },
+            "description": "Successful Response"
           },
           "400": {
             "description": "Invalid period parameter"
           },
+          "404": {
+            "description": "Index not found"
+          },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get Index Composition by Period",
+        "tags": [
+          "trace"
+        ]
       }
     },
     "/api/v1/trace/{index_id}/by-date": {
       "get": {
-        "tags": [
-          "trace"
-        ],
-        "summary": "Get Trace by Date",
         "operationId": "get_trace_by_date_api_v1_trace__index_id__by_date_get",
         "parameters": [
           {
-            "name": "index_id",
+            "description": "Index ID",
             "in": "path",
+            "name": "index_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Index ID",
-              "title": "Index Id"
-            },
-            "description": "Index ID"
+              "title": "Index Id",
+              "type": "string"
+            }
           },
           {
-            "name": "date",
+            "description": "Date in YYYY-MM-DD format",
             "in": "query",
+            "name": "date",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Date in YYYY-MM-DD format",
-              "title": "Date"
-            },
-            "description": "Date in YYYY-MM-DD format"
+              "title": "Date",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TraceByDateResponse"
                 }
               }
-            }
-          },
-          "404": {
-            "description": "Index or trace for date not found"
+            },
+            "description": "Successful Response"
           },
           "400": {
             "description": "Invalid date parameter"
           },
+          "404": {
+            "description": "Index or trace for date not found"
+          },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get Trace by Date",
+        "tags": [
+          "trace"
+        ]
       }
     },
     "/api/v1/distinct-models": {
       "get": {
-        "tags": [
-          "distinct-models"
-        ],
-        "summary": "Get all distinct models",
         "operationId": "get_models_api_v1_distinct_models_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
                     "$ref": "#/components/schemas/ModelItem"
                   },
-                  "type": "array",
-                  "title": "Response Get Models Api V1 Distinct Models Get"
+                  "title": "Response Get Models Api V1 Distinct Models Get",
+                  "type": "array"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           }
-        }
+        },
+        "summary": "Get all distinct models",
+        "tags": [
+          "distinct-models"
+        ]
       }
     },
     "/api/v1/token-factories": {
       "get": {
-        "tags": [
-          "token-factories"
-        ],
-        "summary": "Get all distinct token factories",
         "operationId": "get_token_factories_api_v1_token_factories_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
                     "$ref": "#/components/schemas/TokenFactoryItem"
                   },
-                  "type": "array",
-                  "title": "Response Get Token Factories Api V1 Token Factories Get"
+                  "title": "Response Get Token Factories Api V1 Token Factories Get",
+                  "type": "array"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           }
-        }
+        },
+        "summary": "Get all distinct token factories",
+        "tags": [
+          "token-factories"
+        ]
       }
     },
     "/api/v1/companies": {
       "get": {
-        "tags": [
-          "companies"
-        ],
-        "summary": "Get all distinct companies",
         "operationId": "get_companies_api_v1_companies_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
                     "$ref": "#/components/schemas/CompanyItem"
                   },
-                  "type": "array",
-                  "title": "Response Get Companies Api V1 Companies Get"
+                  "title": "Response Get Companies Api V1 Companies Get",
+                  "type": "array"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           }
-        }
+        },
+        "summary": "Get all distinct companies",
+        "tags": [
+          "companies"
+        ]
       }
     },
-    "/api/v1/tickers/{symbol}": {
+    "/api/v1/tickers/{index_id}": {
       "get": {
-        "tags": [
-          "tickers"
-        ],
-        "summary": "Get public ticker values for a symbol",
-        "operationId": "get_public_ticker_history_api_v1_tickers__symbol__get",
+        "operationId": "get_public_ticker_history_api_v1_tickers__index_id__get",
         "parameters": [
           {
-            "name": "symbol",
+            "description": "Mongo index id",
+            "example": "ai-tdi",
             "in": "path",
+            "name": "index_id",
             "required": true,
             "schema": {
-              "type": "string",
-              "description": "Ticker symbol",
-              "title": "Symbol"
-            },
-            "description": "Ticker symbol",
-            "example": "CNTDI"
+              "description": "Mongo index id",
+              "title": "Index Id",
+              "type": "string"
+            }
           },
           {
-            "name": "startDate",
+            "description": "Start date in YYYY-MM-DD format (requires endDate)",
             "in": "query",
+            "name": "startDate",
             "required": false,
             "schema": {
               "anyOf": [
@@ -664,12 +635,12 @@
               ],
               "description": "Start date in YYYY-MM-DD format (requires endDate)",
               "title": "Startdate"
-            },
-            "description": "Start date in YYYY-MM-DD format (requires endDate)"
+            }
           },
           {
-            "name": "endDate",
+            "description": "End date in YYYY-MM-DD format (requires startDate)",
             "in": "query",
+            "name": "endDate",
             "required": false,
             "schema": {
               "anyOf": [
@@ -682,12 +653,12 @@
               ],
               "description": "End date in YYYY-MM-DD format (requires startDate)",
               "title": "Enddate"
-            },
-            "description": "End date in YYYY-MM-DD format (requires startDate)"
+            }
           },
           {
-            "name": "time_period",
+            "description": "Number of days to include when startDate/endDate are not provided. Defaults to 7 days. Maximum is 365 days. Guests are limited to the shared guest lookback window.",
             "in": "query",
+            "name": "time_period",
             "required": false,
             "schema": {
               "anyOf": [
@@ -698,56 +669,55 @@
                   "type": "null"
                 }
               ],
-              "description": "Number of days to include when startDate/endDate are not provided. Defaults to 7 days. Maximum is 365 days.",
+              "description": "Number of days to include when startDate/endDate are not provided. Defaults to 7 days. Maximum is 365 days. Guests are limited to the shared guest lookback window.",
               "title": "Time Period"
-            },
-            "description": "Number of days to include when startDate/endDate are not provided. Defaults to 7 days. Maximum is 365 days."
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicTickerResponse"
                 }
               }
-            }
-          },
-          "401": {
-            "description": "API key required for history beyond 7 days"
-          },
-          "404": {
-            "description": "Hidden ticker symbol"
+            },
+            "description": "Successful Response"
           },
           "400": {
             "description": "Invalid date parameters"
           },
+          "401": {
+            "description": "Auth required for history beyond the guest window"
+          },
+          "404": {
+            "description": "Unknown or hidden index id"
+          },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get public ticker values for an index id",
+        "tags": [
+          "tickers"
+        ]
       }
     },
     "/api/v1/revenue/{resource_type}": {
       "get": {
-        "tags": [
-          "revenue"
-        ],
-        "summary": "Get ranked revenue by resource type for a day",
         "operationId": "get_revenue_by_resource_api_v1_revenue__resource_type__get",
         "parameters": [
           {
-            "name": "resource_type",
             "in": "path",
+            "name": "resource_type",
             "required": true,
             "schema": {
               "enum": [
@@ -755,13 +725,14 @@
                 "model",
                 "company"
               ],
-              "type": "string",
-              "title": "Resource Type"
+              "title": "Resource Type",
+              "type": "string"
             }
           },
           {
-            "name": "timestamp",
+            "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day.",
             "in": "query",
+            "name": "timestamp",
             "required": false,
             "schema": {
               "anyOf": [
@@ -774,12 +745,12 @@
               ],
               "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day.",
               "title": "Timestamp"
-            },
-            "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day."
+            }
           },
           {
-            "name": "resource_id",
+            "description": "Optional resource id filter. Returns all resources when omitted.",
             "in": "query",
+            "name": "resource_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -792,45 +763,44 @@
               ],
               "description": "Optional resource id filter. Returns all resources when omitted.",
               "title": "Resource Id"
-            },
-            "description": "Optional resource id filter. Returns all resources when omitted."
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__public__schema__RevenueResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get ranked revenue by resource type for a day",
+        "tags": [
+          "revenue"
+        ]
       }
     },
     "/api/v1/token-utilisation/{resource_type}": {
       "get": {
-        "tags": [
-          "token-utilisation"
-        ],
-        "summary": "Get ranked token utilisation by resource type for a day",
         "operationId": "get_token_utilisation_by_resource_api_v1_token_utilisation__resource_type__get",
         "parameters": [
           {
-            "name": "resource_type",
             "in": "path",
+            "name": "resource_type",
             "required": true,
             "schema": {
               "enum": [
@@ -838,13 +808,14 @@
                 "model",
                 "company"
               ],
-              "type": "string",
-              "title": "Resource Type"
+              "title": "Resource Type",
+              "type": "string"
             }
           },
           {
-            "name": "timestamp",
+            "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day.",
             "in": "query",
+            "name": "timestamp",
             "required": false,
             "schema": {
               "anyOf": [
@@ -857,12 +828,12 @@
               ],
               "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day.",
               "title": "Timestamp"
-            },
-            "description": "Date filter (YYYY-MM-DD or ISO-8601). Defaults to latest available day."
+            }
           },
           {
-            "name": "resource_id",
+            "description": "Optional resource id filter. Returns all resources when omitted.",
             "in": "query",
+            "name": "resource_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -875,130 +846,130 @@
               ],
               "description": "Optional resource id filter. Returns all resources when omitted.",
               "title": "Resource Id"
-            },
-            "description": "Optional resource id filter. Returns all resources when omitted."
+            }
           },
           {
-            "name": "token_type",
+            "description": "Token type selector. Applies to model/company resources.",
             "in": "query",
+            "name": "token_type",
             "required": false,
             "schema": {
+              "default": "total",
+              "description": "Token type selector. Applies to model/company resources.",
               "enum": [
                 "total",
                 "prompt",
                 "completion",
                 "reasoning"
               ],
-              "type": "string",
-              "description": "Token type selector. Applies to model/company resources.",
-              "default": "total",
-              "title": "Token Type"
-            },
-            "description": "Token type selector. Applies to model/company resources."
+              "title": "Token Type",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__public__schema__TokenUtilisationResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get ranked token utilisation by resource type for a day",
+        "tags": [
+          "token-utilisation"
+        ]
       }
     },
     "/api/v1/attestations/{event_id}": {
       "get": {
-        "tags": [
-          "attestations"
-        ],
-        "summary": "Get Attestation by Event ID",
         "description": "Retrieve the canonical outcome for a prediction market event.\n\n    This endpoint returns the current resolution status of an event:\n\n    - **Unresolved events**: Return `finalised_time = null` and `outcome = null`\n    - **Resolved events**: Return non-null `finalised_time` and non-null `outcome`\n    - **Unknown events**: Return 404 Not Found\n\n    **Response Fields:**\n    - `event_id`: Unique identifier for the event\n    - `start_time`: When the event period begins (RFC3339 timestamp)\n    - `end_time`: When the event period ends (RFC3339 timestamp)\n    - `finalised_time`: When the event was finalised (RFC3339 timestamp or null)\n    - `outcome`: Final JSON payload with the result (JSON object or null)",
         "operationId": "get_attestation_api_v1_attestations__event_id__get",
         "parameters": [
           {
-            "name": "event_id",
+            "description": "Unique identifier for the event",
+            "example": "evt_123456789",
             "in": "path",
+            "name": "event_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Unique identifier for the event",
-              "title": "Event Id"
-            },
-            "description": "Unique identifier for the event",
-            "example": "evt_123456789"
+              "title": "Event Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AttestationResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "404": {
-            "description": "Event not found",
             "content": {
               "application/json": {
                 "example": {
                   "detail": "Attestation with event_id 'evt_unknown' not found"
                 }
               }
-            }
+            },
+            "description": "Event not found"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get Attestation by Event ID",
+        "tags": [
+          "attestations"
+        ]
       }
     },
     "/api/v1/chart-data/{chart_id}": {
       "get": {
-        "tags": [
-          "chart-data"
-        ],
-        "summary": "Get chart data by chart id",
         "operationId": "get_chart_data_api_v1_chart_data__chart_id__get",
         "parameters": [
           {
-            "name": "chart_id",
+            "description": "Chart id",
             "in": "path",
+            "name": "chart_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Chart id",
-              "title": "Chart Id"
-            },
-            "description": "Chart id"
+              "title": "Chart Id",
+              "type": "string"
+            }
           },
           {
-            "name": "symbol",
+            "description": "Ticker symbol",
             "in": "query",
+            "name": "symbol",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1011,12 +982,11 @@
               ],
               "description": "Ticker symbol",
               "title": "Symbol"
-            },
-            "description": "Ticker symbol"
+            }
           },
           {
-            "name": "model_id",
             "in": "query",
+            "name": "model_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1031,8 +1001,8 @@
             }
           },
           {
-            "name": "factory_id",
             "in": "query",
+            "name": "factory_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1047,8 +1017,8 @@
             }
           },
           {
-            "name": "family_id",
             "in": "query",
+            "name": "family_id",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1063,8 +1033,8 @@
             }
           },
           {
-            "name": "startDate",
             "in": "query",
+            "name": "startDate",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1079,8 +1049,8 @@
             }
           },
           {
-            "name": "endDate",
             "in": "query",
+            "name": "endDate",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1095,8 +1065,9 @@
             }
           },
           {
-            "name": "time_period",
+            "description": "Number of days to include when startDate/endDate are not provided",
             "in": "query",
+            "name": "time_period",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1109,1129 +1080,1128 @@
               ],
               "description": "Number of days to include when startDate/endDate are not provided",
               "title": "Time Period"
-            },
-            "description": "Number of days to include when startDate/endDate are not provided"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "title": "Response Get Chart Data Api V1 Chart Data  Chart Id  Get"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get chart data by chart id",
+        "tags": [
+          "chart-data"
+        ]
       }
     },
     "/api/v1/intelligence/token-factory/daily-revenue": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily revenue per token factory",
         "operationId": "get_token_factory_daily_revenue_api_v1_intelligence_token_factory_daily_revenue_get",
         "parameters": [
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 30,
+              "description": "Trailing days",
               "maximum": 365,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 30,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__token_factory__schema__DailyRevenueResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily revenue per token factory",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/token-factory/rankings": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get token factory rankings",
         "operationId": "get_token_factory_rankings_api_v1_intelligence_token_factory_rankings_get",
         "parameters": [
           {
-            "name": "metric",
             "in": "query",
+            "name": "metric",
             "required": false,
             "schema": {
+              "default": "revenue",
               "enum": [
                 "revenue",
                 "utilisation"
               ],
-              "type": "string",
-              "default": "revenue",
-              "title": "Metric"
+              "title": "Metric",
+              "type": "string"
             }
           },
           {
-            "name": "limit",
             "in": "query",
+            "name": "limit",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 50,
               "maximum": 500,
               "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 30,
+              "description": "Trailing days",
               "maximum": 365,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 30,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TokenFactoryRankingResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get token factory rankings",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/token-factory/factory/{factory_id}": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get overview for a specific token factory",
         "operationId": "get_token_factory_overview_api_v1_intelligence_token_factory_factory__factory_id__get",
         "parameters": [
           {
-            "name": "factory_id",
+            "description": "ID of the token factory",
             "in": "path",
+            "name": "factory_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the token factory",
-              "title": "Factory Id"
-            },
-            "description": "ID of the token factory"
+              "title": "Factory Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TokenFactoryOverview"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get overview for a specific token factory",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/token-factory/factory/{factory_id}/summary": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get summary for a token factory",
         "operationId": "get_token_factory_summary_api_v1_intelligence_token_factory_factory__factory_id__summary_get",
         "parameters": [
           {
-            "name": "factory_id",
+            "description": "ID of the token factory",
             "in": "path",
+            "name": "factory_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the token factory",
-              "title": "Factory Id"
-            },
-            "description": "ID of the token factory"
+              "title": "Factory Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TokenFactorySummaryResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get summary for a token factory",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/daily-revenue-per-model": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily revenue per model for a token factory",
         "operationId": "get_token_factory_daily_revenue_per_model_api_v1_intelligence_token_factory_factory__factory_id__breakdown_daily_revenue_per_model_get",
         "parameters": [
           {
-            "name": "factory_id",
+            "description": "ID of the token factory",
             "in": "path",
+            "name": "factory_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the token factory",
-              "title": "Factory Id"
-            },
-            "description": "ID of the token factory"
+              "title": "Factory Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__token_factory__schema__DailyRevenuePerModelResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily revenue per model for a token factory",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/token-factory/factory/{factory_id}/breakdown/model-rankings": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model rankings within a token factory",
         "operationId": "get_token_factory_model_rankings_api_v1_intelligence_token_factory_factory__factory_id__breakdown_model_rankings_get",
         "parameters": [
           {
-            "name": "factory_id",
+            "description": "ID of the token factory",
             "in": "path",
+            "name": "factory_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the token factory",
-              "title": "Factory Id"
-            },
-            "description": "ID of the token factory"
+              "title": "Factory Id",
+              "type": "string"
+            }
           },
           {
-            "name": "metric",
             "in": "query",
+            "name": "metric",
             "required": false,
             "schema": {
+              "default": "revenue",
               "enum": [
                 "revenue",
                 "tokens"
               ],
-              "type": "string",
-              "default": "revenue",
-              "title": "Metric"
+              "title": "Metric",
+              "type": "string"
             }
           },
           {
-            "name": "limit",
             "in": "query",
+            "name": "limit",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 50,
               "maximum": 500,
               "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__token_factory__schema__ModelRankingResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model rankings within a token factory",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/model-family/family/{family_id}": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model family overview",
         "operationId": "get_model_family_overview_api_v1_intelligence_model_family_family__family_id__get",
         "parameters": [
           {
-            "name": "family_id",
+            "description": "ID of the model family (provider)",
             "in": "path",
+            "name": "family_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the model family (provider)",
-              "title": "Family Id"
-            },
-            "description": "ID of the model family (provider)"
+              "title": "Family Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelFamilyOverview"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model family overview",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/model-family/family/{family_id}/summary": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model family summary",
         "operationId": "get_model_family_summary_api_v1_intelligence_model_family_family__family_id__summary_get",
         "parameters": [
           {
-            "name": "family_id",
+            "description": "ID of the model family (provider)",
             "in": "path",
+            "name": "family_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the model family (provider)",
-              "title": "Family Id"
-            },
-            "description": "ID of the model family (provider)"
+              "title": "Family Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelFamilySummaryResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model family summary",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/model-family/family/{family_id}/breakdown/daily-revenue-per-model": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily revenue per model for a model family",
         "operationId": "get_model_family_daily_revenue_per_model_api_v1_intelligence_model_family_family__family_id__breakdown_daily_revenue_per_model_get",
         "parameters": [
           {
-            "name": "family_id",
+            "description": "ID of the model family (provider)",
             "in": "path",
+            "name": "family_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the model family (provider)",
-              "title": "Family Id"
-            },
-            "description": "ID of the model family (provider)"
+              "title": "Family Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__model_family__schema__DailyRevenuePerModelResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily revenue per model for a model family",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/model-family/family/{family_id}/breakdown/model-rankings": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model rankings within a model family",
         "operationId": "get_model_family_model_rankings_api_v1_intelligence_model_family_family__family_id__breakdown_model_rankings_get",
         "parameters": [
           {
-            "name": "family_id",
+            "description": "ID of the model family (provider)",
             "in": "path",
+            "name": "family_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "ID of the model family (provider)",
-              "title": "Family Id"
-            },
-            "description": "ID of the model family (provider)"
+              "title": "Family Id",
+              "type": "string"
+            }
           },
           {
-            "name": "metric",
             "in": "query",
+            "name": "metric",
             "required": false,
             "schema": {
+              "default": "revenue",
               "enum": [
                 "revenue",
                 "tokens"
               ],
-              "type": "string",
-              "default": "revenue",
-              "title": "Metric"
+              "title": "Metric",
+              "type": "string"
             }
           },
           {
-            "name": "limit",
             "in": "query",
+            "name": "limit",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 50,
               "maximum": 500,
               "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__model_family__schema__ModelRankingResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model rankings within a model family",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/model-family/daily-revenue": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily revenue by model family",
         "operationId": "get_model_family_daily_revenue_api_v1_intelligence_model_family_daily_revenue_get",
         "parameters": [
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 30,
+              "description": "Trailing days",
               "maximum": 365,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 30,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__model_family__schema__DailyRevenueResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily revenue by model family",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/model-family/rankings": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model family rankings",
         "operationId": "get_model_family_rankings_api_v1_intelligence_model_family_rankings_get",
         "parameters": [
           {
-            "name": "metric",
             "in": "query",
+            "name": "metric",
             "required": false,
             "schema": {
+              "default": "revenue",
               "enum": [
                 "revenue",
                 "tokens"
               ],
-              "type": "string",
-              "default": "revenue",
-              "title": "Metric"
+              "title": "Metric",
+              "type": "string"
             }
           },
           {
-            "name": "limit",
             "in": "query",
+            "name": "limit",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 50,
               "maximum": 500,
               "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 30,
+              "description": "Trailing days",
               "maximum": 365,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 30,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelFamilyRankingResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model family rankings",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/models/model/{model_id}/summary": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model summary",
         "operationId": "get_model_summary_api_v1_intelligence_models_model__model_id__summary_get",
         "parameters": [
           {
-            "name": "model_id",
+            "description": "Model ID (model_slug)",
             "in": "path",
+            "name": "model_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Model ID (model_slug)",
-              "title": "Model Id"
-            },
-            "description": "Model ID (model_slug)"
+              "title": "Model Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelSummaryResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model summary",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/models/model/{model_id}/breakdown/daily-revenue-by-token-factory": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily revenue by token factory for a model",
         "operationId": "get_model_daily_revenue_by_token_factory_api_v1_intelligence_models_model__model_id__breakdown_daily_revenue_by_token_factory_get",
         "parameters": [
           {
-            "name": "model_id",
+            "description": "Model ID (model_slug)",
             "in": "path",
+            "name": "model_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Model ID (model_slug)",
-              "title": "Model Id"
-            },
-            "description": "Model ID (model_slug)"
+              "title": "Model Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DailyRevenueByFactoryResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily revenue by token factory for a model",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/models/model/{model_id}/breakdown/daily-token-ratio": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily input/output/reasoning token ratios for a model",
         "operationId": "get_model_daily_token_ratio_api_v1_intelligence_models_model__model_id__breakdown_daily_token_ratio_get",
         "parameters": [
           {
-            "name": "model_id",
+            "description": "Model ID (model_slug)",
             "in": "path",
+            "name": "model_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Model ID (model_slug)",
-              "title": "Model Id"
-            },
-            "description": "Model ID (model_slug)"
+              "title": "Model Id",
+              "type": "string"
+            }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DailyTokenRatioResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily input/output/reasoning token ratios for a model",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/models/model/{model_id}": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model overview",
         "operationId": "get_model_overview_api_v1_intelligence_models_model__model_id__get",
         "parameters": [
           {
-            "name": "model_id",
+            "description": "Model ID (model_slug)",
             "in": "path",
+            "name": "model_id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Model ID (model_slug)",
-              "title": "Model Id"
-            },
-            "description": "Model ID (model_slug)"
+              "title": "Model Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ModelOverview"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model overview",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/models/daily-revenue-per-model": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get daily revenue per model",
         "operationId": "get_models_daily_revenue_per_model_api_v1_intelligence_models_daily_revenue_per_model_get",
         "parameters": [
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__models__schema__DailyRevenuePerModelResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get daily revenue per model",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/intelligence/models/rankings": {
       "get": {
-        "tags": [
-          "intelligence"
-        ],
-        "summary": "Get model rankings",
         "operationId": "get_models_rankings_api_v1_intelligence_models_rankings_get",
         "parameters": [
           {
-            "name": "metric",
             "in": "query",
+            "name": "metric",
             "required": false,
             "schema": {
+              "default": "revenue",
               "enum": [
                 "revenue",
                 "tokens"
               ],
-              "type": "string",
-              "default": "revenue",
-              "title": "Metric"
+              "title": "Metric",
+              "type": "string"
             }
           },
           {
-            "name": "limit",
             "in": "query",
+            "name": "limit",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 50,
               "maximum": 500,
               "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
-            "name": "days",
+            "description": "Trailing days",
             "in": "query",
+            "name": "days",
             "required": false,
             "schema": {
-              "type": "integer",
+              "default": 7,
+              "description": "Trailing days",
               "maximum": 90,
               "minimum": 1,
-              "description": "Trailing days",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Trailing days"
+              "title": "Days",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/app__api__routes__intelligence__models__schema__ModelRankingResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Get model rankings",
+        "tags": [
+          "intelligence"
+        ]
       }
     },
     "/api/v1/user/access-keys": {
       "get": {
-        "tags": [
-          "user"
-        ],
-        "summary": "List active access keys",
         "operationId": "get_access_keys_api_v1_user_access_keys_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
                     "$ref": "#/components/schemas/AccessKeyItem"
                   },
-                  "type": "array",
-                  "title": "Response Get Access Keys Api V1 User Access Keys Get"
+                  "title": "Response Get Access Keys Api V1 User Access Keys Get",
+                  "type": "array"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           }
-        }
-      },
-      "post": {
+        },
+        "summary": "List active access keys",
         "tags": [
           "user"
-        ],
-        "summary": "Create a new access key",
+        ]
+      },
+      "post": {
         "operationId": "create_access_key_api_v1_user_access_keys_post",
         "requestBody": {
           "content": {
@@ -2245,70 +2215,74 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateAccessKeyResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Create a new access key",
+        "tags": [
+          "user"
+        ]
       }
     },
     "/api/v1/user/access-keys/{id}": {
       "delete": {
-        "tags": [
-          "user"
-        ],
-        "summary": "Revoke an access key",
         "operationId": "revoke_access_key_api_v1_user_access_keys__id__delete",
         "parameters": [
           {
-            "name": "id",
+            "description": "Access key id to revoke",
             "in": "path",
+            "name": "id",
             "required": true,
             "schema": {
-              "type": "string",
               "description": "Access key id to revoke",
-              "title": "Id"
-            },
-            "description": "Access key id to revoke"
+              "title": "Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevokeAccessKeyResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Revoke an access key",
+        "tags": [
+          "user"
+        ]
       }
     }
   },
@@ -2316,52 +2290,56 @@
     "schemas": {
       "AccessKeyItem": {
         "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
           "id": {
-            "type": "string",
-            "title": "Id"
+            "title": "Id",
+            "type": "string"
           },
           "label": {
-            "type": "string",
-            "title": "Label"
+            "title": "Label",
+            "type": "string"
           },
           "prefix": {
-            "type": "string",
-            "title": "Prefix"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+            "title": "Prefix",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "label",
           "prefix",
           "created_at"
         ],
-        "title": "AccessKeyItem"
+        "title": "AccessKeyItem",
+        "type": "object"
       },
       "AttestationResponse": {
+        "example": {
+          "end_time": "2024-02-15T23:59:59Z",
+          "event_id": "evt_123456789",
+          "finalised_time": "2024-02-16T12:00:00Z",
+          "outcome": {
+            "score": "3-1",
+            "winner": "team_a"
+          },
+          "start_time": "2024-01-15T00:00:00Z"
+        },
         "properties": {
-          "event_id": {
-            "type": "string",
-            "title": "Event Id",
-            "description": "Unique identifier for the event",
-            "example": "evt_123456789"
-          },
-          "start_time": {
-            "type": "string",
-            "title": "Start Time",
-            "description": "ISO 8601 RFC3339 timestamp for event start",
-            "example": "2024-01-15T00:00:00Z"
-          },
           "end_time": {
-            "type": "string",
-            "title": "End Time",
             "description": "ISO 8601 RFC3339 timestamp for event end",
-            "example": "2024-02-15T23:59:59Z"
+            "example": "2024-02-15T23:59:59Z",
+            "title": "End Time",
+            "type": "string"
+          },
+          "event_id": {
+            "description": "Unique identifier for the event",
+            "example": "evt_123456789",
+            "title": "Event Id",
+            "type": "string"
           },
           "finalised_time": {
             "anyOf": [
@@ -2372,9 +2350,9 @@
                 "type": "null"
               }
             ],
-            "title": "Finalised Time",
             "description": "ISO 8601 RFC3339 timestamp when event was finalised. Null if not yet finalised.",
-            "example": "2024-02-16T12:00:00Z"
+            "example": "2024-02-16T12:00:00Z",
+            "title": "Finalised Time"
           },
           "outcome": {
             "anyOf": [
@@ -2386,255 +2364,250 @@
                 "type": "null"
               }
             ],
-            "title": "Outcome",
             "description": "Final JSON payload containing the outcome. Null if not yet finalised.",
             "example": {
               "score": "3-1",
               "winner": "team_a"
-            }
+            },
+            "title": "Outcome"
+          },
+          "start_time": {
+            "description": "ISO 8601 RFC3339 timestamp for event start",
+            "example": "2024-01-15T00:00:00Z",
+            "title": "Start Time",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "event_id",
           "start_time",
           "end_time"
         ],
         "title": "AttestationResponse",
-        "example": {
-          "end_time": "2024-02-15T23:59:59Z",
-          "event_id": "evt_123456789",
-          "finalised_time": "2024-02-16T12:00:00Z",
-          "outcome": {
-            "score": "3-1",
-            "winner": "team_a"
-          },
-          "start_time": "2024-01-15T00:00:00Z"
-        }
+        "type": "object"
       },
       "CompanyItem": {
         "properties": {
           "provider": {
-            "type": "string",
+            "description": "Company/provider identifier",
             "title": "Provider",
-            "description": "Company/provider identifier"
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "provider"
         ],
-        "title": "CompanyItem"
+        "title": "CompanyItem",
+        "type": "object"
       },
       "CompositionData": {
+        "additionalProperties": true,
+        "example": {
+          "Deepseek Image Token Utilisation": 30.0,
+          "Deepseek R1 Token Utilisation": 28.0,
+          "Deepseek Vision Token Utilisation": 10.0,
+          "NVDA token utilisation": 12.0,
+          "date": "2024-01-15T00:00:00"
+        },
         "properties": {
           "date": {
-            "type": "string",
-            "title": "Date",
             "description": "ISO date string for the composition data",
-            "example": "2024-01-15T00:00:00"
+            "example": "2024-01-15T00:00:00",
+            "title": "Date",
+            "type": "string"
           }
         },
-        "additionalProperties": true,
-        "type": "object",
         "required": [
           "date"
         ],
         "title": "CompositionData",
-        "example": {
-          "Deepseek Image Token Utilisation": 10.0,
-          "Deepseek R1 Token Utilisation": 28.0,
-          "Deepseek Stock": 30.0,
-          "NVDA stock": 12.0,
-          "date": "2024-01-15T00:00:00"
-        }
+        "type": "object"
       },
       "CompositionResponse": {
+        "example": {
+          "composition": [
+            {
+              "Deepseek R1 Token Utilisation": 28.0,
+              "NVDA token utilisation": 12.0,
+              "date": "2024-01-15T00:00:00"
+            }
+          ],
+          "indexId": "china-model-performance",
+          "period": "1M"
+        },
         "properties": {
-          "indexId": {
-            "type": "string",
-            "title": "Indexid",
-            "description": "The index ID",
-            "example": "china-model-performance"
-          },
-          "period": {
-            "type": "string",
-            "title": "Period",
-            "description": "The time period requested",
-            "example": "1M"
-          },
           "composition": {
+            "description": "Composition data filtered by period",
             "items": {
               "$ref": "#/components/schemas/CompositionData"
             },
-            "type": "array",
             "title": "Composition",
-            "description": "Composition data filtered by period"
+            "type": "array"
+          },
+          "indexId": {
+            "description": "The index ID",
+            "example": "china-model-performance",
+            "title": "Indexid",
+            "type": "string"
+          },
+          "period": {
+            "description": "The time period requested",
+            "example": "1M",
+            "title": "Period",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "indexId",
           "period",
           "composition"
         ],
         "title": "CompositionResponse",
-        "example": {
-          "composition": [
-            {
-              "Deepseek R1 Token Utilisation": 28.0,
-              "NVDA stock": 12.0,
-              "date": "2024-01-15T00:00:00"
-            }
-          ],
-          "indexId": "china-model-performance",
-          "period": "1M"
-        }
+        "type": "object"
       },
       "CreateAccessKeyRequest": {
         "properties": {
           "label": {
-            "type": "string",
             "maxLength": 128,
             "minLength": 1,
-            "title": "Label"
+            "title": "Label",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "label"
         ],
-        "title": "CreateAccessKeyRequest"
+        "title": "CreateAccessKeyRequest",
+        "type": "object"
       },
       "CreateAccessKeyResponse": {
+        "description": "Response includes the plaintext key exactly once at creation time.",
         "properties": {
           "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
+            "title": "Id",
+            "type": "string"
           },
           "key": {
-            "type": "string",
-            "title": "Key"
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "label",
           "key"
         ],
         "title": "CreateAccessKeyResponse",
-        "description": "Response includes the plaintext key exactly once at creation time."
+        "type": "object"
       },
       "DailyRevenueByFactoryEntry": {
         "properties": {
           "date": {
-            "type": "string",
-            "title": "Date"
+            "title": "Date",
+            "type": "string"
           },
           "factories": {
             "items": {
               "$ref": "#/components/schemas/FactoryDailyRevenuePoint"
             },
-            "type": "array",
-            "title": "Factories"
+            "title": "Factories",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "date"
         ],
-        "title": "DailyRevenueByFactoryEntry"
+        "title": "DailyRevenueByFactoryEntry",
+        "type": "object"
       },
       "DailyRevenueByFactoryResponse": {
         "properties": {
-          "model_id": {
-            "type": "string",
-            "title": "Model Id"
-          },
-          "model_name": {
-            "type": "string",
-            "title": "Model Name"
-          },
-          "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
           "data": {
             "items": {
               "$ref": "#/components/schemas/DailyRevenueByFactoryEntry"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_name": {
+            "title": "Model Name",
+            "type": "string"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
           "from_date",
           "to_date"
         ],
-        "title": "DailyRevenueByFactoryResponse"
+        "title": "DailyRevenueByFactoryResponse",
+        "type": "object"
       },
       "DailyRevenuePerModelEntry": {
         "properties": {
           "date": {
-            "type": "string",
+            "description": "YYYY-MM-DD date for the bucket",
             "title": "Date",
-            "description": "YYYY-MM-DD date for the bucket"
+            "type": "string"
           },
           "models": {
             "items": {
               "$ref": "#/components/schemas/ModelDailyRevenuePoint"
             },
-            "type": "array",
-            "title": "Models"
+            "title": "Models",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "date"
         ],
-        "title": "DailyRevenuePerModelEntry"
+        "title": "DailyRevenuePerModelEntry",
+        "type": "object"
       },
       "DailyTokenRatioPoint": {
         "properties": {
-          "date": {
-            "type": "string",
-            "title": "Date"
-          },
-          "prompt_tokens": {
-            "type": "integer",
-            "title": "Prompt Tokens"
-          },
           "completion_tokens": {
-            "type": "integer",
-            "title": "Completion Tokens"
+            "title": "Completion Tokens",
+            "type": "integer"
           },
-          "reasoning_tokens": {
-            "type": "integer",
-            "title": "Reasoning Tokens"
+          "date": {
+            "title": "Date",
+            "type": "string"
           },
           "input_output_ratio": {
-            "type": "number",
-            "title": "Input Output Ratio"
+            "title": "Input Output Ratio",
+            "type": "number"
+          },
+          "prompt_tokens": {
+            "title": "Prompt Tokens",
+            "type": "integer"
           },
           "reasoning_share": {
-            "type": "number",
+            "description": "reasoning / (prompt+completion+reasoning)",
             "title": "Reasoning Share",
-            "description": "reasoning / (prompt+completion+reasoning)"
+            "type": "number"
+          },
+          "reasoning_tokens": {
+            "title": "Reasoning Tokens",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "date",
           "prompt_tokens",
@@ -2643,100 +2616,101 @@
           "input_output_ratio",
           "reasoning_share"
         ],
-        "title": "DailyTokenRatioPoint"
+        "title": "DailyTokenRatioPoint",
+        "type": "object"
       },
       "DailyTokenRatioResponse": {
         "properties": {
-          "model_id": {
-            "type": "string",
-            "title": "Model Id"
-          },
-          "model_name": {
-            "type": "string",
-            "title": "Model Name"
-          },
-          "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
           "data": {
             "items": {
               "$ref": "#/components/schemas/DailyTokenRatioPoint"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_name": {
+            "title": "Model Name",
+            "type": "string"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
           "from_date",
           "to_date"
         ],
-        "title": "DailyTokenRatioResponse"
+        "title": "DailyTokenRatioResponse",
+        "type": "object"
       },
       "DailyTokensResponse": {
+        "description": "Current total token ingestion and previous-day delta.",
         "properties": {
-          "totalCount": {
-            "type": "string",
-            "title": "Totalcount",
-            "description": "Total tokens ingested till date",
-            "example": "60004601111"
-          },
           "delta": {
-            "type": "string",
-            "title": "Delta",
             "description": "Total tokens ingested on the previous completed UTC day. Used by frontend for per-second tick rate.",
-            "example": "100000000"
+            "example": "100000000",
+            "title": "Delta",
+            "type": "string"
           },
           "lastUpdated": {
-            "type": "string",
-            "title": "Lastupdated",
             "description": "ISO 8601 UTC timestamp for when the count was computed",
-            "example": "2026-03-27T00:14:00.000Z"
+            "example": "2026-03-27T00:14:00.000Z",
+            "title": "Lastupdated",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Total tokens ingested till date",
+            "example": "60004601111",
+            "title": "Totalcount",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "totalCount",
           "delta",
           "lastUpdated"
         ],
         "title": "DailyTokensResponse",
-        "description": "Current total token ingestion and previous-day delta."
+        "type": "object"
       },
       "FactoryDailyRevenuePoint": {
         "properties": {
           "factory_id": {
-            "type": "string",
-            "title": "Factory Id"
+            "title": "Factory Id",
+            "type": "string"
           },
           "factory_name": {
-            "type": "string",
-            "title": "Factory Name"
+            "title": "Factory Name",
+            "type": "string"
           },
           "revenue_usd": {
-            "type": "number",
-            "title": "Revenue Usd"
+            "title": "Revenue Usd",
+            "type": "number"
           },
           "token_count": {
-            "type": "integer",
-            "title": "Token Count"
+            "title": "Token Count",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
           "revenue_usd",
           "token_count"
         ],
-        "title": "FactoryDailyRevenuePoint"
+        "title": "FactoryDailyRevenuePoint",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2744,60 +2718,38 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             },
-            "type": "array",
-            "title": "Detail"
+            "title": "Detail",
+            "type": "array"
           }
         },
-        "type": "object",
-        "title": "HTTPValidationError"
-      },
-      "HealthResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "default": "ok"
-          },
-          "mongodb": {
-            "type": "string",
-            "title": "Mongodb"
-          }
-        },
-        "type": "object",
-        "required": [
-          "mongodb"
-        ],
-        "title": "HealthResponse",
-        "description": "Health check response model.",
-        "example": {
-          "mongodb": "connected",
-          "status": "ok"
-        }
+        "title": "HTTPValidationError",
+        "type": "object"
       },
       "IndexFamily": {
+        "description": "Index family payload.",
         "properties": {
+          "family_description": {
+            "description": "Description of the index family",
+            "title": "Family Description",
+            "type": "string"
+          },
           "family_id": {
-            "type": "string",
+            "description": "ID of the index family",
             "title": "Family Id",
-            "description": "ID of the index family"
+            "type": "string"
           },
           "family_name": {
-            "type": "string",
+            "description": "Display name for the index family",
             "title": "Family Name",
-            "description": "Display name for the index family"
-          },
-          "family_description": {
-            "type": "string",
-            "title": "Family Description",
-            "description": "Description of the index family"
+            "type": "string"
           },
           "family_tickers": {
+            "description": "Ticker symbols for all visible indices in this family",
             "items": {
               "type": "string"
             },
-            "type": "array",
             "title": "Family Tickers",
-            "description": "Ticker symbols for all visible indices in this family"
+            "type": "array"
           },
           "primary_index": {
             "anyOf": [
@@ -2811,60 +2763,28 @@
             "description": "Primary index details for this family"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
           "family_description"
         ],
         "title": "IndexFamily",
-        "description": "Index family payload."
+        "type": "object"
       },
       "IndexGroup": {
+        "description": "Index group/category information.",
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier for the group",
-            "example": "token-utilisation"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Display name of the group",
-            "example": "Token Utilisation Based Indexes"
-          },
           "description": {
-            "type": "string",
-            "title": "Description",
             "description": "Description of what this group represents",
-            "example": "Benchmarks built primarily on model token consumption and utilization signals."
+            "example": "Benchmarks built primarily on model token consumption and utilization signals.",
+            "title": "Description",
+            "type": "string"
           },
-          "primary_index": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary Index",
-            "description": "ID of the primary index in this group (maps to indices.id)",
-            "example": "actdi-core-index"
-          },
-          "what_it_does_markdown": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "What It Does Markdown",
-            "description": "Markdown content describing what this index family does, why it is important, and for whom. Rendered on the index group page.",
-            "example": "## What this family measures\n\nThese indices track institutional-scale AI token demand across major providers, making it possible to benchmark exposure to model revenue and usage."
+          "id": {
+            "description": "Unique identifier for the group",
+            "example": "token-utilisation",
+            "title": "Id",
+            "type": "string"
           },
           "methodology_url": {
             "anyOf": [
@@ -2875,66 +2795,75 @@
                 "type": "null"
               }
             ],
-            "title": "Methodology Url",
             "description": "URL for the index family methodology or documentation",
-            "example": "https://indices.ai/methodology/token-demand-family"
+            "example": "https://indices.ai/methodology/token-demand-family",
+            "title": "Methodology Url"
+          },
+          "name": {
+            "description": "Display name of the group",
+            "example": "Token Utilisation Based Indexes",
+            "title": "Name",
+            "type": "string"
+          },
+          "primary_index": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the primary index in this group (maps to indices.id)",
+            "example": "actdi-core-index",
+            "title": "Primary Index"
+          },
+          "what_it_does_markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Markdown content describing what this index family does, why it is important, and for whom. Rendered on the index group page.",
+            "example": "## What this family measures\n\nThese indices track institutional-scale AI token demand across major providers, making it possible to benchmark exposure to model revenue and usage.",
+            "title": "What It Does Markdown"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "name",
           "description"
         ],
         "title": "IndexGroup",
-        "description": "Index group/category information."
+        "type": "object"
       },
       "IndicesSummaryResponse": {
+        "description": "Summary metrics for indices.",
         "properties": {
           "models_count": {
-            "type": "integer",
-            "title": "Models Count",
             "description": "Total number of models",
-            "example": 121
+            "example": 121,
+            "title": "Models Count",
+            "type": "integer"
           },
           "token_spend": {
-            "type": "number",
-            "title": "Token Spend",
             "description": "Total token spend",
-            "example": 180000000
+            "example": 180000000,
+            "title": "Token Spend",
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "models_count",
           "token_spend"
         ],
         "title": "IndicesSummaryResponse",
-        "description": "Summary metrics for indices."
+        "type": "object"
       },
       "MarketDataResponse": {
-        "properties": {
-          "indices": {
-            "items": {
-              "$ref": "#/components/schemas/MarketIndex"
-            },
-            "type": "array",
-            "title": "Indices",
-            "description": "List of all available indices"
-          },
-          "lastUpdated": {
-            "type": "string",
-            "title": "Lastupdated",
-            "description": "Time when data was last updated",
-            "example": "02:30 PM"
-          }
-        },
-        "type": "object",
-        "required": [
-          "indices",
-          "lastUpdated"
-        ],
-        "title": "MarketDataResponse",
         "description": "Response containing all market indices and last update time.",
         "example": {
           "indices": [
@@ -2961,153 +2890,87 @@
             }
           ],
           "lastUpdated": "02:30 PM"
-        }
+        },
+        "properties": {
+          "indices": {
+            "description": "List of all available indices",
+            "items": {
+              "$ref": "#/components/schemas/MarketIndex"
+            },
+            "title": "Indices",
+            "type": "array"
+          },
+          "lastUpdated": {
+            "description": "Time when data was last updated",
+            "example": "02:30 PM",
+            "title": "Lastupdated",
+            "type": "string"
+          }
+        },
+        "required": [
+          "indices",
+          "lastUpdated"
+        ],
+        "title": "MarketDataResponse",
+        "type": "object"
       },
       "MarketIndex": {
+        "description": "Complete market index information with performance metrics and history.\n\nNote: Performance metrics (value, change, changeDay, changeWeek, changeMonth, change3Month, etc.) are\ncalculated dynamically from ticker data stored in ClickHouse, not from the MongoDB index collection.\nThe MongoDB collection only stores metadata (name, description, group, etc.).",
         "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier for the index",
-            "example": "china-model-performance"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Display name of the index",
-            "example": "China TDI"
-          },
-          "symbol": {
-            "type": "string",
-            "title": "Symbol",
-            "description": "Ticker symbol for the index",
-            "example": "CNTDI"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value",
-            "description": "Current index value (calculated from latest ticker data)",
-            "example": 2847.32
-          },
-          "currency": {
-            "type": "string",
-            "title": "Currency",
-            "description": "Currency code",
-            "example": "CNY"
-          },
           "change": {
-            "type": "number",
-            "title": "Change",
             "description": "Daily percentage change (calculated from ticker data)",
-            "example": 0.12
-          },
-          "changeAbsolute": {
-            "type": "number",
-            "title": "Changeabsolute",
-            "description": "Daily absolute change value (calculated from ticker data)",
-            "example": 3.42
-          },
-          "changeDay": {
-            "type": "number",
-            "title": "Changeday",
-            "description": "Percentage change for last day (calculated from ticker data)",
-            "example": 0.12
-          },
-          "changeWeek": {
-            "type": "number",
-            "title": "Changeweek",
-            "description": "Percentage change for last week (calculated from ticker data)",
-            "example": 0.85
-          },
-          "changeMonth": {
-            "type": "number",
-            "title": "Changemonth",
-            "description": "Percentage change for last month (calculated from ticker data)",
-            "example": 2.45
+            "example": 0.12,
+            "title": "Change",
+            "type": "number"
           },
           "change3Month": {
-            "type": "number",
-            "title": "Change3Month",
             "description": "Percentage change for last 3 months (calculated from ticker data)",
-            "example": 8.23
+            "example": 8.23,
+            "title": "Change3Month",
+            "type": "number"
           },
-          "timestamp": {
-            "type": "string",
-            "title": "Timestamp",
-            "description": "ISO timestamp of when this data was generated",
-            "example": "2024-01-15T12:00:00"
+          "changeAbsolute": {
+            "description": "Daily absolute change value (calculated from ticker data)",
+            "example": 3.42,
+            "title": "Changeabsolute",
+            "type": "number"
           },
-          "group": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/IndexGroup"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Index group/category information (from MongoDB)"
+          "changeDay": {
+            "description": "Percentage change for last day (calculated from ticker data)",
+            "example": 0.12,
+            "title": "Changeday",
+            "type": "number"
           },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Detailed description of the index (from MongoDB)"
+          "changeMonth": {
+            "description": "Percentage change for last month (calculated from ticker data)",
+            "example": 2.45,
+            "title": "Changemonth",
+            "type": "number"
           },
-          "startDate": {
-            "type": "string",
-            "title": "Startdate",
-            "description": "ISO date string for index start date (from MongoDB)",
-            "example": "2023-01-15"
-          },
-          "methodologyPdfUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Methodologypdfurl",
-            "description": "URL to downloadable methodology PDF (from MongoDB)"
-          },
-          "featuredArticles": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Featuredarticles",
-            "description": "List of featured articles about this index (from MongoDB)"
+          "changeWeek": {
+            "description": "Percentage change for last week (calculated from ticker data)",
+            "example": 0.85,
+            "title": "Changeweek",
+            "type": "number"
           },
           "compositionHistory": {
+            "description": "Historical composition data (from trace collection)",
             "items": {
               "$ref": "#/components/schemas/CompositionData"
             },
-            "type": "array",
             "title": "Compositionhistory",
-            "description": "Historical composition data (from trace collection)"
+            "type": "array"
           },
-          "relatedTickers": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Relatedtickers",
-            "description": "Array of related ticker symbols (from MongoDB)"
+          "currency": {
+            "description": "Currency code",
+            "example": "CNY",
+            "title": "Currency",
+            "type": "string"
           },
-          "rebalancingPeriod": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rebalancingperiod",
-            "description": "Rebalancing period: 'first_calendar_day' or 'first_business_day' (from MongoDB)",
-            "example": "first_calendar_day"
+          "description": {
+            "description": "Detailed description of the index (from MongoDB)",
+            "title": "Description",
+            "type": "string"
           },
           "evaluationParams": {
             "anyOf": [
@@ -3119,7 +2982,6 @@
                 "type": "null"
               }
             ],
-            "title": "Evaluationparams",
             "description": "Evaluation parameters for index calculation (from MongoDB). These map 1:1 to the engine's index configuration and control which calculation methodology is used.",
             "example": {
               "indexType": "token-demand-v2",
@@ -3134,24 +2996,113 @@
               "tickerParams": {
                 "exclude_weekends": false
               }
-            }
+            },
+            "title": "Evaluationparams"
           },
           "featured": {
-            "type": "boolean",
-            "title": "Featured",
-            "description": "Whether this index is featured/curated (e.g. for homepage carousel)",
             "default": false,
-            "example": true
+            "description": "Whether this index is featured/curated (e.g. for homepage carousel)",
+            "example": true,
+            "title": "Featured",
+            "type": "boolean"
+          },
+          "featuredArticles": {
+            "description": "List of featured articles about this index (from MongoDB)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Featuredarticles",
+            "type": "array"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndexGroup"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Index group/category information (from MongoDB)"
+          },
+          "id": {
+            "description": "Unique identifier for the index",
+            "example": "china-model-performance",
+            "title": "Id",
+            "type": "string"
+          },
+          "methodologyPdfUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "URL to downloadable methodology PDF (from MongoDB)",
+            "title": "Methodologypdfurl"
+          },
+          "name": {
+            "description": "Display name of the index",
+            "example": "China TDI",
+            "title": "Name",
+            "type": "string"
+          },
+          "rebalancingPeriod": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rebalancing period: 'first_calendar_day' or 'first_business_day' (from MongoDB)",
+            "example": "first_calendar_day",
+            "title": "Rebalancingperiod"
+          },
+          "relatedTickers": {
+            "description": "Array of related ticker symbols (from MongoDB)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Relatedtickers",
+            "type": "array"
+          },
+          "startDate": {
+            "description": "ISO date string for index start date (from MongoDB)",
+            "example": "2023-01-15",
+            "title": "Startdate",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Ticker symbol for the index",
+            "example": "CNTDI",
+            "title": "Symbol",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "ISO timestamp of when this data was generated",
+            "example": "2024-01-15T12:00:00",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "value": {
+            "description": "Current index value (calculated from latest ticker data)",
+            "example": 2847.32,
+            "title": "Value",
+            "type": "number"
           },
           "version": {
-            "type": "integer",
-            "title": "Version",
-            "description": "Methodology / ticker series version for this index (MongoDB). ClickHouse reads for this symbol use the highest version per timestamp when multiple exist.",
             "default": 1,
-            "example": 1
+            "description": "Methodology / ticker series version for this index (MongoDB). ClickHouse reads for this symbol use the highest version per timestamp when multiple exist.",
+            "example": 1,
+            "title": "Version",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "name",
@@ -3169,111 +3120,110 @@
           "startDate"
         ],
         "title": "MarketIndex",
-        "description": "Complete market index information with performance metrics and history.\n\nNote: Performance metrics (value, change, changeDay, changeWeek, changeMonth, change3Month, etc.) are\ncalculated dynamically from ticker data stored in ClickHouse, not from the MongoDB index collection.\nThe MongoDB collection only stores metadata (name, description, group, etc.)."
+        "type": "object"
       },
       "ModelDailyRevenuePoint": {
         "properties": {
           "model_id": {
-            "type": "string",
+            "description": "Model identifier (model_slug when available)",
             "title": "Model Id",
-            "description": "Model identifier (model_slug when available)"
+            "type": "string"
           },
           "model_name": {
-            "type": "string",
+            "description": "Model display name",
             "title": "Model Name",
-            "description": "Model display name"
+            "type": "string"
           },
           "revenue_usd": {
-            "type": "number",
+            "description": "Revenue for this model on this day (USD)",
             "title": "Revenue Usd",
-            "description": "Revenue for this model on this day (USD)"
+            "type": "number"
           },
           "token_count": {
-            "type": "integer",
+            "description": "Tokens for this model on this day",
             "title": "Token Count",
-            "description": "Tokens for this model on this day"
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
           "revenue_usd",
           "token_count"
         ],
-        "title": "ModelDailyRevenuePoint"
+        "title": "ModelDailyRevenuePoint",
+        "type": "object"
       },
       "ModelFamilyOverview": {
         "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
           "family_id": {
-            "type": "string",
-            "title": "Family Id"
+            "title": "Family Id",
+            "type": "string"
           },
           "family_name": {
-            "type": "string",
-            "title": "Family Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
+            "title": "Family Name",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
           "description"
         ],
-        "title": "ModelFamilyOverview"
+        "title": "ModelFamilyOverview",
+        "type": "object"
       },
       "ModelFamilyRankingResponse": {
         "properties": {
           "metric": {
-            "type": "string",
             "enum": [
               "revenue",
               "tokens"
             ],
-            "title": "Metric"
+            "title": "Metric",
+            "type": "string"
           },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/ModelFamilyRankingRow"
             },
-            "type": "array",
-            "title": "Rows"
+            "title": "Rows",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "metric"
         ],
-        "title": "ModelFamilyRankingResponse"
+        "title": "ModelFamilyRankingResponse",
+        "type": "object"
       },
       "ModelFamilyRankingRow": {
         "properties": {
           "family_id": {
-            "type": "string",
-            "title": "Family Id"
+            "title": "Family Id",
+            "type": "string"
           },
           "family_name": {
-            "type": "string",
-            "title": "Family Name"
-          },
-          "revenue_usd": {
-            "type": "number",
-            "title": "Revenue Usd"
-          },
-          "token_count": {
-            "type": "integer",
-            "title": "Token Count"
+            "title": "Family Name",
+            "type": "string"
           },
           "rank": {
-            "type": "integer",
-            "title": "Rank"
+            "title": "Rank",
+            "type": "integer"
+          },
+          "revenue_usd": {
+            "title": "Revenue Usd",
+            "type": "number"
+          },
+          "token_count": {
+            "title": "Token Count",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
@@ -3281,93 +3231,48 @@
           "token_count",
           "rank"
         ],
-        "title": "ModelFamilyRankingRow"
+        "title": "ModelFamilyRankingRow",
+        "type": "object"
       },
       "ModelFamilyRevenuePoint": {
         "properties": {
           "family_id": {
-            "type": "string",
+            "description": "Model family identifier (provider)",
             "title": "Family Id",
-            "description": "Model family identifier (provider)"
+            "type": "string"
           },
           "family_name": {
-            "type": "string",
+            "description": "Display name for model family (provider)",
             "title": "Family Name",
-            "description": "Display name for model family (provider)"
+            "type": "string"
           },
           "revenue_usd": {
-            "type": "number",
+            "description": "Revenue (USD) for this day",
             "title": "Revenue Usd",
-            "description": "Revenue (USD) for this day"
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
           "revenue_usd"
         ],
-        "title": "ModelFamilyRevenuePoint"
+        "title": "ModelFamilyRevenuePoint",
+        "type": "object"
       },
       "ModelFamilySummaryResponse": {
         "properties": {
           "family_id": {
-            "type": "string",
-            "title": "Family Id"
+            "title": "Family Id",
+            "type": "string"
           },
           "family_name": {
-            "type": "string",
-            "title": "Family Name"
+            "title": "Family Name",
+            "type": "string"
           },
           "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
-          "models_supported_period": {
-            "type": "integer",
-            "title": "Models Supported Period",
-            "description": "Distinct models with usage in requested period"
-          },
-          "revenue_usd_period": {
-            "type": "number",
-            "title": "Revenue Usd Period",
-            "description": "Total revenue in requested period (USD)"
-          },
-          "revenue_stddev_usd_period": {
-            "type": "number",
-            "title": "Revenue Stddev Usd Period",
-            "description": "Standard deviation of daily revenue over requested period (USD)"
-          },
-          "gross_profit_usd_period": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gross Profit Usd Period",
-            "description": "Gross profit in requested period (USD). TBA until cost data is available."
-          },
-          "models_supported_7d": {
-            "type": "integer",
-            "title": "Models Supported 7D",
-            "description": "Distinct models with usage in last 7 days"
-          },
-          "revenue_usd_7d": {
-            "type": "number",
-            "title": "Revenue Usd 7D",
-            "description": "Total revenue in last 7 days (USD)"
-          },
-          "revenue_stddev_usd_7d": {
-            "type": "number",
-            "title": "Revenue Stddev Usd 7D",
-            "description": "Standard deviation of daily revenue over last 7 days (USD)"
+            "title": "From Date",
+            "type": "string"
           },
           "gross_profit_usd_7d": {
             "anyOf": [
@@ -3378,11 +3283,56 @@
                 "type": "null"
               }
             ],
-            "title": "Gross Profit Usd 7D",
-            "description": "Gross profit in last 7 days (USD). TBA until cost data is available."
+            "description": "Gross profit in last 7 days (USD). TBA until cost data is available.",
+            "title": "Gross Profit Usd 7D"
+          },
+          "gross_profit_usd_period": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Gross profit in requested period (USD). TBA until cost data is available.",
+            "title": "Gross Profit Usd Period"
+          },
+          "models_supported_7d": {
+            "description": "Distinct models with usage in last 7 days",
+            "title": "Models Supported 7D",
+            "type": "integer"
+          },
+          "models_supported_period": {
+            "description": "Distinct models with usage in requested period",
+            "title": "Models Supported Period",
+            "type": "integer"
+          },
+          "revenue_stddev_usd_7d": {
+            "description": "Standard deviation of daily revenue over last 7 days (USD)",
+            "title": "Revenue Stddev Usd 7D",
+            "type": "number"
+          },
+          "revenue_stddev_usd_period": {
+            "description": "Standard deviation of daily revenue over requested period (USD)",
+            "title": "Revenue Stddev Usd Period",
+            "type": "number"
+          },
+          "revenue_usd_7d": {
+            "description": "Total revenue in last 7 days (USD)",
+            "title": "Revenue Usd 7D",
+            "type": "number"
+          },
+          "revenue_usd_period": {
+            "description": "Total revenue in requested period (USD)",
+            "title": "Revenue Usd Period",
+            "type": "number"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
@@ -3395,156 +3345,156 @@
           "revenue_usd_7d",
           "revenue_stddev_usd_7d"
         ],
-        "title": "ModelFamilySummaryResponse"
+        "title": "ModelFamilySummaryResponse",
+        "type": "object"
       },
       "ModelInfo": {
         "properties": {
           "id": {
-            "type": "string",
-            "title": "Id",
             "description": "Model slug/ID",
-            "example": "gpt-4o"
+            "example": "gpt-4o",
+            "title": "Id",
+            "type": "string"
           },
           "name": {
-            "type": "string",
-            "title": "Name",
             "description": "Model name",
-            "example": "GPT-4o"
+            "example": "GPT-4o",
+            "title": "Name",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "name"
         ],
-        "title": "ModelInfo"
+        "title": "ModelInfo",
+        "type": "object"
       },
       "ModelItem": {
         "properties": {
-          "model_slug": {
-            "type": "string",
-            "title": "Model Slug",
-            "description": "Unique model slug"
-          },
           "model_name": {
-            "type": "string",
+            "description": "Display model name",
             "title": "Model Name",
-            "description": "Display model name"
+            "type": "string"
+          },
+          "model_slug": {
+            "description": "Unique model slug",
+            "title": "Model Slug",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "model_slug",
           "model_name"
         ],
-        "title": "ModelItem"
+        "title": "ModelItem",
+        "type": "object"
       },
       "ModelMetric": {
         "properties": {
-          "model_id": {
-            "type": "string",
-            "title": "Model Id",
-            "description": "Model slug/ID",
-            "example": "gpt-4o"
-          },
-          "model_name": {
-            "type": "string",
-            "title": "Model Name",
-            "description": "Model name",
-            "example": "GPT-4o"
-          },
-          "total": {
-            "type": "number",
-            "title": "Total",
-            "description": "Total metric value for the time period",
-            "example": 45000000.0
-          },
           "data_points": {
+            "description": "Daily metric values",
             "items": {
               "$ref": "#/components/schemas/ModelMetricDataPoint"
             },
-            "type": "array",
             "title": "Data Points",
-            "description": "Daily metric values"
+            "type": "array"
+          },
+          "model_id": {
+            "description": "Model slug/ID",
+            "example": "gpt-4o",
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_name": {
+            "description": "Model name",
+            "example": "GPT-4o",
+            "title": "Model Name",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total metric value for the time period",
+            "example": 45000000.0,
+            "title": "Total",
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
           "total"
         ],
-        "title": "ModelMetric"
+        "title": "ModelMetric",
+        "type": "object"
       },
       "ModelMetricDataPoint": {
         "properties": {
           "date": {
-            "type": "string",
-            "title": "Date",
             "description": "ISO date string",
-            "example": "2024-01-15"
+            "example": "2024-01-15",
+            "title": "Date",
+            "type": "string"
           },
           "value": {
-            "type": "number",
-            "title": "Value",
             "description": "Metric value for this date",
-            "example": 1500000.0
+            "example": 1500000.0,
+            "title": "Value",
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "date",
           "value"
         ],
-        "title": "ModelMetricDataPoint"
+        "title": "ModelMetricDataPoint",
+        "type": "object"
       },
       "ModelOverview": {
         "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
           "model_id": {
-            "type": "string",
-            "title": "Model Id"
+            "title": "Model Id",
+            "type": "string"
           },
           "model_name": {
-            "type": "string",
-            "title": "Model Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
+            "title": "Model Name",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
           "description"
         ],
-        "title": "ModelOverview"
+        "title": "ModelOverview",
+        "type": "object"
       },
       "ModelRankingRow": {
         "properties": {
           "model_id": {
-            "type": "string",
-            "title": "Model Id"
+            "title": "Model Id",
+            "type": "string"
           },
           "model_name": {
-            "type": "string",
-            "title": "Model Name"
-          },
-          "revenue_usd": {
-            "type": "number",
-            "title": "Revenue Usd"
-          },
-          "token_count": {
-            "type": "integer",
-            "title": "Token Count"
+            "title": "Model Name",
+            "type": "string"
           },
           "rank": {
-            "type": "integer",
-            "title": "Rank"
+            "title": "Rank",
+            "type": "integer"
+          },
+          "revenue_usd": {
+            "title": "Revenue Usd",
+            "type": "number"
+          },
+          "token_count": {
+            "title": "Token Count",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
@@ -3552,68 +3502,68 @@
           "token_count",
           "rank"
         ],
-        "title": "ModelRankingRow"
+        "title": "ModelRankingRow",
+        "type": "object"
       },
       "ModelSummaryResponse": {
         "properties": {
-          "model_id": {
-            "type": "string",
-            "title": "Model Id"
-          },
-          "model_name": {
-            "type": "string",
-            "title": "Model Name"
-          },
-          "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
+          "avg_input_output_ratio_7d": {
+            "description": "Average input/output ratio (7d)",
+            "title": "Avg Input Output Ratio 7D",
+            "type": "number"
           },
           "avg_input_output_ratio_period": {
-            "type": "number",
+            "description": "Average input/output ratio for the requested period",
             "title": "Avg Input Output Ratio Period",
-            "description": "Average input/output ratio for the requested period"
+            "type": "number"
           },
-          "revenue_usd_period": {
-            "type": "number",
-            "title": "Revenue Usd Period",
-            "description": "Total revenue in requested period (USD)"
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
           },
-          "revenue_stddev_usd_period": {
-            "type": "number",
-            "title": "Revenue Stddev Usd Period",
-            "description": "Standard deviation of daily revenue over requested period (USD)"
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
           },
-          "total_tokens_period": {
-            "type": "integer",
-            "title": "Total Tokens Period",
-            "description": "Total tokens processed in requested period"
-          },
-          "avg_input_output_ratio_7d": {
-            "type": "number",
-            "title": "Avg Input Output Ratio 7D",
-            "description": "Average input/output ratio (7d)"
-          },
-          "revenue_usd_7d": {
-            "type": "number",
-            "title": "Revenue Usd 7D",
-            "description": "Total revenue in last 7 days (USD)"
+          "model_name": {
+            "title": "Model Name",
+            "type": "string"
           },
           "revenue_stddev_usd_7d": {
-            "type": "number",
+            "description": "Standard deviation of daily revenue over last 7 days (USD)",
             "title": "Revenue Stddev Usd 7D",
-            "description": "Standard deviation of daily revenue over last 7 days (USD)"
+            "type": "number"
+          },
+          "revenue_stddev_usd_period": {
+            "description": "Standard deviation of daily revenue over requested period (USD)",
+            "title": "Revenue Stddev Usd Period",
+            "type": "number"
+          },
+          "revenue_usd_7d": {
+            "description": "Total revenue in last 7 days (USD)",
+            "title": "Revenue Usd 7D",
+            "type": "number"
+          },
+          "revenue_usd_period": {
+            "description": "Total revenue in requested period (USD)",
+            "title": "Revenue Usd Period",
+            "type": "number"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           },
           "total_tokens_7d": {
-            "type": "integer",
+            "description": "Total tokens processed in last 7 days",
             "title": "Total Tokens 7D",
-            "description": "Total tokens processed in last 7 days"
+            "type": "integer"
+          },
+          "total_tokens_period": {
+            "description": "Total tokens processed in requested period",
+            "title": "Total Tokens Period",
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "model_id",
           "model_name",
@@ -3628,24 +3578,10 @@
           "revenue_stddev_usd_7d",
           "total_tokens_7d"
         ],
-        "title": "ModelSummaryResponse"
+        "title": "ModelSummaryResponse",
+        "type": "object"
       },
       "ModelsResponse": {
-        "properties": {
-          "models": {
-            "items": {
-              "$ref": "#/components/schemas/ModelInfo"
-            },
-            "type": "array",
-            "title": "Models",
-            "description": "List of all available models"
-          }
-        },
-        "type": "object",
-        "required": [
-          "models"
-        ],
-        "title": "ModelsResponse",
         "example": {
           "models": [
             {
@@ -3657,24 +3593,35 @@
               "name": "Claude 3.5 Sonnet"
             }
           ]
-        }
+        },
+        "properties": {
+          "models": {
+            "description": "List of all available models",
+            "items": {
+              "$ref": "#/components/schemas/ModelInfo"
+            },
+            "title": "Models",
+            "type": "array"
+          }
+        },
+        "required": [
+          "models"
+        ],
+        "title": "ModelsResponse",
+        "type": "object"
       },
       "PrimaryIndex": {
+        "description": "Primary index details for an index family.",
         "properties": {
           "index_id": {
-            "type": "string",
+            "description": "ID of the primary index",
             "title": "Index Id",
-            "description": "ID of the primary index"
+            "type": "string"
           },
           "index_name": {
-            "type": "string",
+            "description": "Display name of the primary index",
             "title": "Index Name",
-            "description": "Display name of the primary index"
-          },
-          "symbol": {
-            "type": "string",
-            "title": "Symbol",
-            "description": "Ticker symbol of the primary index"
+            "type": "string"
           },
           "index_value": {
             "anyOf": [
@@ -3685,68 +3632,57 @@
                 "type": "null"
               }
             ],
-            "title": "Index Value",
-            "description": "Latest primary index value (calculated from ticker data)"
+            "description": "Latest primary index value (calculated from ticker data)",
+            "title": "Index Value"
+          },
+          "symbol": {
+            "description": "Ticker symbol of the primary index",
+            "title": "Symbol",
+            "type": "string"
           },
           "trend": {
-            "type": "string",
+            "default": "neutral",
+            "description": "Price trend derived from the most recent data window: up, down, or neutral",
             "enum": [
               "up",
               "down",
               "neutral"
             ],
             "title": "Trend",
-            "description": "Price trend derived from the most recent data window: up, down, or neutral",
-            "default": "neutral"
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "index_id",
           "index_name",
           "symbol"
         ],
         "title": "PrimaryIndex",
-        "description": "Primary index details for an index family."
+        "type": "object"
       },
       "ProviderInfo": {
         "properties": {
           "id": {
-            "type": "string",
-            "title": "Id",
             "description": "Provider/family identifier",
-            "example": "openai"
+            "example": "openai",
+            "title": "Id",
+            "type": "string"
           },
           "name": {
-            "type": "string",
-            "title": "Name",
             "description": "Provider display name",
-            "example": "OpenAI"
+            "example": "OpenAI",
+            "title": "Name",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "id",
           "name"
         ],
-        "title": "ProviderInfo"
+        "title": "ProviderInfo",
+        "type": "object"
       },
       "ProvidersResponse": {
-        "properties": {
-          "providers": {
-            "items": {
-              "$ref": "#/components/schemas/ProviderInfo"
-            },
-            "type": "array",
-            "title": "Providers",
-            "description": "List of all available providers"
-          }
-        },
-        "type": "object",
-        "required": [
-          "providers"
-        ],
-        "title": "ProvidersResponse",
         "example": {
           "providers": [
             {
@@ -3758,256 +3694,203 @@
               "name": "Anthropic"
             }
           ]
-        }
+        },
+        "properties": {
+          "providers": {
+            "description": "List of all available providers",
+            "items": {
+              "$ref": "#/components/schemas/ProviderInfo"
+            },
+            "title": "Providers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "providers"
+        ],
+        "title": "ProvidersResponse",
+        "type": "object"
       },
       "PublicTickerResponse": {
         "properties": {
-          "symbol": {
-            "type": "string",
-            "title": "Symbol",
-            "description": "Ticker symbol",
-            "example": "CNTDI"
-          },
-          "start_date": {
-            "type": "string",
-            "title": "Start Date",
-            "description": "Resolved range start (YYYY-MM-DD)",
-            "example": "2024-01-08"
-          },
           "end_date": {
-            "type": "string",
-            "title": "End Date",
             "description": "Resolved range end (YYYY-MM-DD)",
-            "example": "2024-01-15"
+            "example": "2024-01-15",
+            "title": "End Date",
+            "type": "string"
           },
           "items": {
+            "description": "Ticker values in ascending timestamp order",
             "items": {
               "$ref": "#/components/schemas/TickerValuePoint"
             },
-            "type": "array",
             "title": "Items",
-            "description": "Ticker values in ascending timestamp order"
+            "type": "array"
+          },
+          "start_date": {
+            "description": "Resolved range start (YYYY-MM-DD)",
+            "example": "2024-01-08",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Ticker symbol",
+            "example": "CNTDI",
+            "title": "Symbol",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "symbol",
           "start_date",
           "end_date"
         ],
-        "title": "PublicTickerResponse"
+        "title": "PublicTickerResponse",
+        "type": "object"
       },
       "RevenueRow": {
         "properties": {
           "resource_id": {
-            "type": "string",
+            "description": "Resource identifier",
             "title": "Resource Id",
-            "description": "Resource identifier"
+            "type": "string"
           },
           "revenue_usd": {
-            "type": "number",
+            "description": "Revenue in USD",
             "title": "Revenue Usd",
-            "description": "Revenue in USD"
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "resource_id",
           "revenue_usd"
         ],
-        "title": "RevenueRow"
+        "title": "RevenueRow",
+        "type": "object"
       },
       "RevokeAccessKeyResponse": {
         "properties": {
           "success": {
-            "type": "boolean",
+            "default": true,
             "title": "Success",
-            "default": true
+            "type": "boolean"
           }
         },
-        "type": "object",
-        "title": "RevokeAccessKeyResponse"
-      },
-      "Stock": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Stock symbol (used as _id in MongoDB)",
-            "example": "AAPL"
-          },
-          "ticker_symbol": {
-            "type": "string",
-            "title": "Ticker Symbol",
-            "description": "Related ticker symbol",
-            "example": "AAPL"
-          },
-          "stock_name": {
-            "type": "string",
-            "title": "Stock Name",
-            "description": "Displayable stock name",
-            "example": "Apple Inc."
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "ticker_symbol",
-          "stock_name"
-        ],
-        "title": "Stock",
-        "description": "Stock information from MongoDB.",
-        "example": {
-          "id": "AAPL",
-          "stock_name": "Apple Inc.",
-          "ticker_symbol": "AAPL"
-        }
-      },
-      "StocksResponse": {
-        "properties": {
-          "stocks": {
-            "items": {
-              "$ref": "#/components/schemas/Stock"
-            },
-            "type": "array",
-            "title": "Stocks",
-            "description": "List of all available stocks"
-          }
-        },
-        "type": "object",
-        "required": [
-          "stocks"
-        ],
-        "title": "StocksResponse",
-        "description": "Response containing all stocks from MongoDB.",
-        "example": {
-          "stocks": [
-            {
-              "id": "AAPL",
-              "stock_name": "Apple Inc.",
-              "ticker_symbol": "AAPL"
-            },
-            {
-              "id": "GOOGL",
-              "stock_name": "Alphabet Inc.",
-              "ticker_symbol": "GOOGL"
-            }
-          ]
-        }
+        "title": "RevokeAccessKeyResponse",
+        "type": "object"
       },
       "TickerValuePoint": {
         "properties": {
           "timestamp": {
-            "type": "string",
-            "title": "Timestamp",
             "description": "ISO timestamp for the ticker observation",
-            "example": "2024-01-15T00:00:00"
+            "example": "2024-01-15T00:00:00",
+            "title": "Timestamp",
+            "type": "string"
           },
           "value": {
-            "type": "number",
-            "title": "Value",
             "description": "Ticker value at this timestamp",
-            "example": 2847.32
+            "example": 2847.32,
+            "title": "Value",
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "timestamp",
           "value"
         ],
-        "title": "TickerValuePoint"
+        "title": "TickerValuePoint",
+        "type": "object"
       },
       "TokenFactoryItem": {
         "properties": {
-          "provider_slug": {
-            "type": "string",
-            "title": "Provider Slug",
-            "description": "Token factory slug"
-          },
           "provider_name": {
-            "type": "string",
+            "description": "Token factory display name",
             "title": "Provider Name",
-            "description": "Token factory display name"
+            "type": "string"
+          },
+          "provider_slug": {
+            "description": "Token factory slug",
+            "title": "Provider Slug",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "provider_slug",
           "provider_name"
         ],
-        "title": "TokenFactoryItem"
+        "title": "TokenFactoryItem",
+        "type": "object"
       },
       "TokenFactoryOverview": {
         "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
           "factory_id": {
-            "type": "string",
-            "title": "Factory Id"
+            "title": "Factory Id",
+            "type": "string"
           },
           "factory_name": {
-            "type": "string",
-            "title": "Factory Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
+            "title": "Factory Name",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
           "description"
         ],
-        "title": "TokenFactoryOverview"
+        "title": "TokenFactoryOverview",
+        "type": "object"
       },
       "TokenFactoryRankingResponse": {
         "properties": {
           "metric": {
-            "type": "string",
             "enum": [
               "revenue",
               "utilisation"
             ],
-            "title": "Metric"
+            "title": "Metric",
+            "type": "string"
           },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/TokenFactoryRankingRow"
             },
-            "type": "array",
-            "title": "Rows"
+            "title": "Rows",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "metric"
         ],
-        "title": "TokenFactoryRankingResponse"
+        "title": "TokenFactoryRankingResponse",
+        "type": "object"
       },
       "TokenFactoryRankingRow": {
         "properties": {
           "factory_id": {
-            "type": "string",
-            "title": "Factory Id"
+            "title": "Factory Id",
+            "type": "string"
           },
           "factory_name": {
-            "type": "string",
-            "title": "Factory Name"
-          },
-          "revenue_usd": {
-            "type": "number",
-            "title": "Revenue Usd"
-          },
-          "token_utilisation": {
-            "type": "number",
-            "title": "Token Utilisation"
+            "title": "Factory Name",
+            "type": "string"
           },
           "rank": {
-            "type": "integer",
-            "title": "Rank"
+            "title": "Rank",
+            "type": "integer"
+          },
+          "revenue_usd": {
+            "title": "Revenue Usd",
+            "type": "number"
+          },
+          "token_utilisation": {
+            "title": "Token Utilisation",
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
@@ -4015,93 +3898,48 @@
           "token_utilisation",
           "rank"
         ],
-        "title": "TokenFactoryRankingRow"
+        "title": "TokenFactoryRankingRow",
+        "type": "object"
       },
       "TokenFactoryRevenuePoint": {
         "properties": {
           "factory_id": {
-            "type": "string",
+            "description": "Unique identifier for the token factory",
             "title": "Factory Id",
-            "description": "Unique identifier for the token factory"
+            "type": "string"
           },
           "factory_name": {
-            "type": "string",
+            "description": "Display name of the token factory",
             "title": "Factory Name",
-            "description": "Display name of the token factory"
+            "type": "string"
           },
           "revenue_usd": {
-            "type": "number",
+            "description": "Revenue (USD) for this day",
             "title": "Revenue Usd",
-            "description": "Revenue (USD) for this day"
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
           "revenue_usd"
         ],
-        "title": "TokenFactoryRevenuePoint"
+        "title": "TokenFactoryRevenuePoint",
+        "type": "object"
       },
       "TokenFactorySummaryResponse": {
         "properties": {
           "factory_id": {
-            "type": "string",
-            "title": "Factory Id"
+            "title": "Factory Id",
+            "type": "string"
           },
           "factory_name": {
-            "type": "string",
-            "title": "Factory Name"
+            "title": "Factory Name",
+            "type": "string"
           },
           "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
-          "models_supported_period": {
-            "type": "integer",
-            "title": "Models Supported Period",
-            "description": "Distinct models with usage in requested period"
-          },
-          "revenue_usd_period": {
-            "type": "number",
-            "title": "Revenue Usd Period",
-            "description": "Total revenue in requested period (USD)"
-          },
-          "revenue_stddev_usd_period": {
-            "type": "number",
-            "title": "Revenue Stddev Usd Period",
-            "description": "Standard deviation of daily revenue over requested period (USD)"
-          },
-          "gross_profit_usd_period": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gross Profit Usd Period",
-            "description": "Gross profit in requested period (USD). TBA until cost data is available."
-          },
-          "models_supported_7d": {
-            "type": "integer",
-            "title": "Models Supported 7D",
-            "description": "Distinct models with usage in last 7 days"
-          },
-          "revenue_usd_7d": {
-            "type": "number",
-            "title": "Revenue Usd 7D",
-            "description": "Total revenue in last 7 days (USD)"
-          },
-          "revenue_stddev_usd_7d": {
-            "type": "number",
-            "title": "Revenue Stddev Usd 7D",
-            "description": "Standard deviation of daily revenue over last 7 days (USD)"
+            "title": "From Date",
+            "type": "string"
           },
           "gross_profit_usd_7d": {
             "anyOf": [
@@ -4112,11 +3950,56 @@
                 "type": "null"
               }
             ],
-            "title": "Gross Profit Usd 7D",
-            "description": "Gross profit in last 7 days (USD). TBA until cost data is available."
+            "description": "Gross profit in last 7 days (USD). TBA until cost data is available.",
+            "title": "Gross Profit Usd 7D"
+          },
+          "gross_profit_usd_period": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Gross profit in requested period (USD). TBA until cost data is available.",
+            "title": "Gross Profit Usd Period"
+          },
+          "models_supported_7d": {
+            "description": "Distinct models with usage in last 7 days",
+            "title": "Models Supported 7D",
+            "type": "integer"
+          },
+          "models_supported_period": {
+            "description": "Distinct models with usage in requested period",
+            "title": "Models Supported Period",
+            "type": "integer"
+          },
+          "revenue_stddev_usd_7d": {
+            "description": "Standard deviation of daily revenue over last 7 days (USD)",
+            "title": "Revenue Stddev Usd 7D",
+            "type": "number"
+          },
+          "revenue_stddev_usd_period": {
+            "description": "Standard deviation of daily revenue over requested period (USD)",
+            "title": "Revenue Stddev Usd Period",
+            "type": "number"
+          },
+          "revenue_usd_7d": {
+            "description": "Total revenue in last 7 days (USD)",
+            "title": "Revenue Usd 7D",
+            "type": "number"
+          },
+          "revenue_usd_period": {
+            "description": "Total revenue in requested period (USD)",
+            "title": "Revenue Usd Period",
+            "type": "number"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
@@ -4129,69 +4012,77 @@
           "revenue_usd_7d",
           "revenue_stddev_usd_7d"
         ],
-        "title": "TokenFactorySummaryResponse"
+        "title": "TokenFactorySummaryResponse",
+        "type": "object"
       },
       "TokenUtilisationRow": {
         "properties": {
+          "rank": {
+            "description": "Rank ordered by highest token usage first",
+            "title": "Rank",
+            "type": "integer"
+          },
           "resource_id": {
-            "type": "string",
+            "description": "Resource identifier",
             "title": "Resource Id",
-            "description": "Resource identifier"
+            "type": "string"
           },
           "resource_name": {
-            "type": "string",
+            "description": "Resource display name",
             "title": "Resource Name",
-            "description": "Resource display name"
+            "type": "string"
           },
           "token_count": {
-            "type": "integer",
+            "description": "Token usage for selected token_type",
             "title": "Token Count",
-            "description": "Token usage for selected token_type"
-          },
-          "rank": {
-            "type": "integer",
-            "title": "Rank",
-            "description": "Rank ordered by highest token usage first"
+            "type": "integer"
           }
         },
-        "type": "object",
         "required": [
           "resource_id",
           "resource_name",
           "token_count",
           "rank"
         ],
-        "title": "TokenUtilisationRow"
+        "title": "TokenUtilisationRow",
+        "type": "object"
       },
       "TraceByDateResponse": {
         "properties": {
           "date": {
-            "type": "string",
+            "description": "ISO date string for the trace",
             "title": "Date",
-            "description": "ISO date string for the trace"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value",
-            "description": "Index value on this date"
+            "type": "string"
           },
           "trace": {
             "additionalProperties": true,
-            "type": "object",
+            "description": "Trace data: composition, breakdown, logs",
             "title": "Trace",
-            "description": "Trace data: composition, breakdown, logs"
+            "type": "object"
+          },
+          "value": {
+            "description": "Index value on this date",
+            "title": "Value",
+            "type": "number"
           }
         },
-        "type": "object",
         "required": [
           "date",
           "value",
           "trace"
         ],
-        "title": "TraceByDateResponse"
+        "title": "TraceByDateResponse",
+        "type": "object"
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -4203,88 +4094,81 @@
                 }
               ]
             },
-            "type": "array",
-            "title": "Location"
+            "title": "Location",
+            "type": "array"
           },
           "msg": {
-            "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
+            "title": "Error Type",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "loc",
           "msg",
           "type"
         ],
-        "title": "ValidationError"
+        "title": "ValidationError",
+        "type": "object"
       },
       "app__api__routes__intelligence__model_family__schema__DailyRevenueEntry": {
         "properties": {
           "date": {
-            "type": "string",
+            "description": "YYYY-MM-DD date for the bucket",
             "title": "Date",
-            "description": "YYYY-MM-DD date for the bucket"
+            "type": "string"
           },
           "families": {
             "items": {
               "$ref": "#/components/schemas/ModelFamilyRevenuePoint"
             },
-            "type": "array",
-            "title": "Families"
+            "title": "Families",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "date"
         ],
-        "title": "DailyRevenueEntry"
+        "title": "DailyRevenueEntry",
+        "type": "object"
       },
       "app__api__routes__intelligence__model_family__schema__DailyRevenuePerModelResponse": {
         "properties": {
-          "family_id": {
-            "type": "string",
-            "title": "Family Id"
-          },
-          "family_name": {
-            "type": "string",
-            "title": "Family Name"
-          },
-          "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
           "data": {
             "items": {
               "$ref": "#/components/schemas/DailyRevenuePerModelEntry"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
+          },
+          "family_id": {
+            "title": "Family Id",
+            "type": "string"
+          },
+          "family_name": {
+            "title": "Family Name",
+            "type": "string"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
           "from_date",
           "to_date"
         ],
-        "title": "DailyRevenuePerModelResponse"
+        "title": "DailyRevenuePerModelResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__model_family__schema__DailyRevenueResponse": {
         "properties": {
@@ -4292,48 +4176,47 @@
             "items": {
               "$ref": "#/components/schemas/app__api__routes__intelligence__model_family__schema__DailyRevenueEntry"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
           }
         },
-        "type": "object",
-        "title": "DailyRevenueResponse"
+        "title": "DailyRevenueResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__model_family__schema__ModelRankingResponse": {
         "properties": {
           "family_id": {
-            "type": "string",
-            "title": "Family Id"
+            "title": "Family Id",
+            "type": "string"
           },
           "family_name": {
-            "type": "string",
-            "title": "Family Name"
+            "title": "Family Name",
+            "type": "string"
           },
           "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
+            "title": "From Date",
+            "type": "string"
           },
           "metric": {
-            "type": "string",
             "enum": [
               "revenue",
               "tokens"
             ],
-            "title": "Metric"
+            "title": "Metric",
+            "type": "string"
           },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/ModelRankingRow"
             },
-            "type": "array",
-            "title": "Rows"
+            "title": "Rows",
+            "type": "array"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "family_id",
           "family_name",
@@ -4341,122 +4224,123 @@
           "to_date",
           "metric"
         ],
-        "title": "ModelRankingResponse"
+        "title": "ModelRankingResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__models__schema__DailyRevenuePerModelResponse": {
         "properties": {
-          "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
           "data": {
             "items": {
               "$ref": "#/components/schemas/DailyRevenuePerModelEntry"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "from_date",
           "to_date"
         ],
-        "title": "DailyRevenuePerModelResponse"
+        "title": "DailyRevenuePerModelResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__models__schema__ModelRankingResponse": {
         "properties": {
           "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
+            "title": "From Date",
+            "type": "string"
           },
           "metric": {
-            "type": "string",
             "enum": [
               "revenue",
               "tokens"
             ],
-            "title": "Metric"
+            "title": "Metric",
+            "type": "string"
           },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/ModelRankingRow"
             },
-            "type": "array",
-            "title": "Rows"
+            "title": "Rows",
+            "type": "array"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "from_date",
           "to_date",
           "metric"
         ],
-        "title": "ModelRankingResponse"
+        "title": "ModelRankingResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__token_factory__schema__DailyRevenueEntry": {
         "properties": {
           "date": {
-            "type": "string",
+            "description": "YYYY-MM-DD date for the revenue bucket",
             "title": "Date",
-            "description": "YYYY-MM-DD date for the revenue bucket"
+            "type": "string"
           },
           "factories": {
             "items": {
               "$ref": "#/components/schemas/TokenFactoryRevenuePoint"
             },
-            "type": "array",
-            "title": "Factories"
+            "title": "Factories",
+            "type": "array"
           }
         },
-        "type": "object",
         "required": [
           "date"
         ],
-        "title": "DailyRevenueEntry"
+        "title": "DailyRevenueEntry",
+        "type": "object"
       },
       "app__api__routes__intelligence__token_factory__schema__DailyRevenuePerModelResponse": {
         "properties": {
-          "factory_id": {
-            "type": "string",
-            "title": "Factory Id"
-          },
-          "factory_name": {
-            "type": "string",
-            "title": "Factory Name"
-          },
-          "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
-          },
           "data": {
             "items": {
               "$ref": "#/components/schemas/DailyRevenuePerModelEntry"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
+          },
+          "factory_id": {
+            "title": "Factory Id",
+            "type": "string"
+          },
+          "factory_name": {
+            "title": "Factory Name",
+            "type": "string"
+          },
+          "from_date": {
+            "title": "From Date",
+            "type": "string"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
           "from_date",
           "to_date"
         ],
-        "title": "DailyRevenuePerModelResponse"
+        "title": "DailyRevenuePerModelResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__token_factory__schema__DailyRevenueResponse": {
         "properties": {
@@ -4464,48 +4348,47 @@
             "items": {
               "$ref": "#/components/schemas/app__api__routes__intelligence__token_factory__schema__DailyRevenueEntry"
             },
-            "type": "array",
-            "title": "Data"
+            "title": "Data",
+            "type": "array"
           }
         },
-        "type": "object",
-        "title": "DailyRevenueResponse"
+        "title": "DailyRevenueResponse",
+        "type": "object"
       },
       "app__api__routes__intelligence__token_factory__schema__ModelRankingResponse": {
         "properties": {
           "factory_id": {
-            "type": "string",
-            "title": "Factory Id"
+            "title": "Factory Id",
+            "type": "string"
           },
           "factory_name": {
-            "type": "string",
-            "title": "Factory Name"
+            "title": "Factory Name",
+            "type": "string"
           },
           "from_date": {
-            "type": "string",
-            "title": "From Date"
-          },
-          "to_date": {
-            "type": "string",
-            "title": "To Date"
+            "title": "From Date",
+            "type": "string"
           },
           "metric": {
-            "type": "string",
             "enum": [
               "revenue",
               "tokens"
             ],
-            "title": "Metric"
+            "title": "Metric",
+            "type": "string"
           },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/ModelRankingRow"
             },
-            "type": "array",
-            "title": "Rows"
+            "title": "Rows",
+            "type": "array"
+          },
+          "to_date": {
+            "title": "To Date",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "factory_id",
           "factory_name",
@@ -4513,156 +4396,165 @@
           "to_date",
           "metric"
         ],
-        "title": "ModelRankingResponse"
+        "title": "ModelRankingResponse",
+        "type": "object"
       },
       "app__api__routes__models__schema__RevenueResponse": {
         "properties": {
-          "time_period": {
-            "type": "string",
-            "title": "Time Period",
-            "description": "Time period requested",
-            "example": "1M"
-          },
-          "start_date": {
-            "type": "string",
-            "title": "Start Date",
-            "description": "Start date of the period",
-            "example": "2024-01-01"
-          },
           "end_date": {
-            "type": "string",
-            "title": "End Date",
             "description": "End date of the period",
-            "example": "2024-01-31"
+            "example": "2024-01-31",
+            "title": "End Date",
+            "type": "string"
           },
           "models": {
+            "description": "Revenue data for each model",
             "items": {
               "$ref": "#/components/schemas/ModelMetric"
             },
-            "type": "array",
             "title": "Models",
-            "description": "Revenue data for each model"
+            "type": "array"
+          },
+          "start_date": {
+            "description": "Start date of the period",
+            "example": "2024-01-01",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "time_period": {
+            "description": "Time period requested",
+            "example": "1M",
+            "title": "Time Period",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "time_period",
           "start_date",
           "end_date",
           "models"
         ],
-        "title": "RevenueResponse"
+        "title": "RevenueResponse",
+        "type": "object"
       },
       "app__api__routes__models__schema__TokenUtilisationResponse": {
         "properties": {
-          "time_period": {
-            "type": "string",
-            "title": "Time Period",
-            "description": "Time period requested",
-            "example": "1M"
-          },
-          "start_date": {
-            "type": "string",
-            "title": "Start Date",
-            "description": "Start date of the period",
-            "example": "2024-01-01"
-          },
           "end_date": {
-            "type": "string",
-            "title": "End Date",
             "description": "End date of the period",
-            "example": "2024-01-31"
+            "example": "2024-01-31",
+            "title": "End Date",
+            "type": "string"
           },
           "models": {
+            "description": "Token utilisation data for each model",
             "items": {
               "$ref": "#/components/schemas/ModelMetric"
             },
-            "type": "array",
             "title": "Models",
-            "description": "Token utilisation data for each model"
+            "type": "array"
+          },
+          "start_date": {
+            "description": "Start date of the period",
+            "example": "2024-01-01",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "time_period": {
+            "description": "Time period requested",
+            "example": "1M",
+            "title": "Time Period",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "time_period",
           "start_date",
           "end_date",
           "models"
         ],
-        "title": "TokenUtilisationResponse"
+        "title": "TokenUtilisationResponse",
+        "type": "object"
       },
       "app__api__routes__public__schema__RevenueResponse": {
         "properties": {
-          "resource_type": {
-            "type": "string",
-            "enum": [
-              "token-factory",
-              "model",
-              "company"
-            ],
-            "title": "Resource Type"
-          },
-          "timestamp": {
-            "type": "string",
-            "title": "Timestamp",
-            "description": "YYYY-MM-DD date used for the ranking"
-          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/RevenueRow"
             },
-            "type": "array",
-            "title": "Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "resource_type",
-          "timestamp"
-        ],
-        "title": "RevenueResponse"
-      },
-      "app__api__routes__public__schema__TokenUtilisationResponse": {
-        "properties": {
+            "title": "Items",
+            "type": "array"
+          },
           "resource_type": {
-            "type": "string",
             "enum": [
               "token-factory",
               "model",
               "company"
             ],
-            "title": "Resource Type"
+            "title": "Resource Type",
+            "type": "string"
           },
           "timestamp": {
-            "type": "string",
+            "description": "YYYY-MM-DD date used for the ranking",
             "title": "Timestamp",
-            "description": "YYYY-MM-DD date used for the ranking"
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_type",
+          "timestamp"
+        ],
+        "title": "RevenueResponse",
+        "type": "object"
+      },
+      "app__api__routes__public__schema__TokenUtilisationResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TokenUtilisationRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "resource_type": {
+            "enum": [
+              "token-factory",
+              "model",
+              "company"
+            ],
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "YYYY-MM-DD date used for the ranking",
+            "title": "Timestamp",
+            "type": "string"
           },
           "token_type": {
-            "type": "string",
             "enum": [
               "total",
               "prompt",
               "completion",
               "reasoning"
             ],
-            "title": "Token Type"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/TokenUtilisationRow"
-            },
-            "type": "array",
-            "title": "Items"
+            "title": "Token Type",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "resource_type",
           "timestamp",
           "token_type"
         ],
-        "title": "TokenUtilisationResponse"
+        "title": "TokenUtilisationResponse",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key (prefixed iai_sk_). Accepted as the X-API-Key header or as the raw value of the Authorization header (no Bearer prefix)."
       }
     }
   }
